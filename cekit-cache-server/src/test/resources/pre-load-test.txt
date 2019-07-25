@@ -1,0 +1,3 @@
+https://repo1.maven.org/maven2/org/jboss/jandex/2.1.1.Final/jandex-2.1.1.Final-sources.jar
+https://repo1.maven.org/maven2/org/jboss/narayana/jta/cdi/5.9.5.Final/cdi-5.9.5.Final-sources.jar
+https://repo1.maven.org/maven2/org/jboss/remoting/jboss-remoting/5.0.9.Final/jboss-remoting-5.0.9.Final.jar

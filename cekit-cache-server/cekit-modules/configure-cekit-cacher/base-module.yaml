@@ -1,0 +1,8 @@
+schema_version: 1
+name: configure-cekit-cacher
+execute:
+- script: configure
+
+artifacts:
+  - name: "cekit-cacher.jar"
+    md5: ${MD5SUM}

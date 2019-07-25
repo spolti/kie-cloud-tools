@@ -1,0 +1,7 @@
+#!/bin/sh
+
+SOURCES_DIR=/tmp/artifacts
+
+cp -v $SOURCES_DIR/cekit-cacher.jar /deployments
+
+chown -R cacher. /deployments

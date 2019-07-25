@@ -1,0 +1,80 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Quarkus CEKit Cacher</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/js/patternfly.min.js"></script>
+    <!-- Load AngularJS -->
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+
+    <script type="text/javascript">
+        var app = angular.module("CacherManagement", []);
+
+        //Controller Part
+        app.controller("CacherManagementController", function ($scope, $http) {
+
+
+            //HTTP POST/PUT methods for add new artifact
+            $scope.fetch = function () {
+                var method = "POST";
+                var url = "/resource/fetch/" + encodeURIComponent($scope.form.url);
+                $http({
+                    method: method,
+                    url: url,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function (response) {
+                    console.log(response.data)
+                    console.log(response)
+                    $scope.fetchResult = response.data;
+                });
+            };
+        });
+    </script>
+
+</head>
+<body ng-app="CacherManagement" ng-controller="CacherManagementController">
+
+<nav class="navbar navbar-default navbar-pf" role="navigation">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div class="navbar-brand">Quarkus CEKit Cacher - Serve as a artifact cache for CEKit builds</div>
+
+    </div>
+    <div class="collapse navbar-collapse navbar-collapse-1">
+        <ul class="nav navbar-nav navbar-primary">
+            <li class="active">
+                <a href="index.html">Add artifacts</a>
+            </li>
+            <li>
+                <a href="list-artifacts.html">List Artifacts</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <form class="form-horizontal" ng-submit="fetch()">
+        <h2>Fetch Artifact from URL</h2>
+        <h4>{{fetchResult}}</h4>
+        <div class=" form-sm-3">
+            <label class="col-md-1 control-label" for="artifactLink">Artifact link</label>
+            <label class="col-md-5 control-label"><input type="url" class="form-control" id="artifactLink"
+                                                         ng-model="form.url"
+                                                         placeholder="Enter the artifact link"></label>
+        </div>
+        <button type="submit" class="btn btn-primary">Fetch Artifact</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+kind: Template
+apiVersion: v1
+metadata:
+  annotations:
+    description: Application template for CeKit Cacher.
+    tags: cekit,cacher,quarkus
+    openshift.io/display-name: CeKit Cacher.
+  name: cekit-cacher
+labels:
+  template: cekit-cacher
+message: The CeKit Cacher was deployed, check the deployment status.
+parameters:
+  - displayName: Application Name
+    description: "The name for the application."
+    name: APPLICATION_NAME
+    value: cekit-cacher
+    required: true
+  - displayName: Cacher base data directory
+    description: "Location for the base cacher directory, defaults to opt/cacher/data"
+    name: CACHER_BASE_DIR
+    required: true
+  - displayName: Cacher preload file
+    description: "Configure it with a txt file containing the files that you wants the cacher to preload."
+    name: CACHER_PRELOAD_FILE
+    required: false
+  - displayName: Cacher enable nightly builds watcher
+    description: "Enables the nightly builds watcher"
+    name: CACHER_ENABLE_NIGHTLY_WATCHER
+    required: false
+  - displayName: Cacher RHDM/PAM product version
+    description: "rhpam/rhdm product version"
+    name: CACHER_PRODUCT_VERSION
+    required: false
+  - displayName: Cacher RHDM build properties url
+    description: "RHDM build properties url"
+    name: CACHER_RHDM_URL
+    required: false
+  - displayName: Cacher RHPAM build properties url
+    description:  "RHPAM build properties url"
+    name: CACHER_RHPAM_URL
+    required: false
+  - displayName: Cacher enblad GitHub bot
+    description: "Enables github integration"
+    name: CACHER_ENABLE_GITHUB_BOT
+    required: false
+  - displayName: Cacher GitHub bot username
+    description: "Github account username"
+    name: CACHER_GITHUB_USERNAME
+    required: false
+  - displayName: Cacher GitHub bot password
+    description: "Github user password"
+    name: CACHER_GITHUB_PASSWORD
+    required: false
+  - displayName: Cacher GitHUb bot email
+    description: "Github user email"
+    name: CACHER_GITHUB_EMAIL
+    required: false
+  - displayName: Cacher RHDM GitHub upstream url
+    description: "RHDM GitHub upstream url"
+    name: CACHER_RHDM_UPSTREAM
+    required: false
+  - displayName: Cacher RHPAM GitHub upstream url
+    description: "RHPAM GitHub upstream url"
+    name: CACHER_RHPAM_UPSTREAM
+    required: false
+  - displayName: Cacher RHDM/PAM GitHub default branch
+    description: "RHPAM and RHDM upstream default branch"
+    name: CACHER_DEFAULT_BRANCH
+    required: false
+  - displayName: Cacher GitHub PR reviewers
+    description: "The Google Chats user id, just use the ID in this field, ignore the 'user/' prefix"
+    name: CACHER_GITHUB_REVIEWERS
+    required: false
+  - displayName: Cacher Hangouts Webhook
+    description: "The Google hangout webhook for a target room or chat, can be obtained on the room"
+    name: CACHER_HANGOUTS_WEBHOOK
+    required: false
+  - displayName: ImageStream Namespace
+    description: "Namespace in which the ImageStreams for Cacher image is installed"
+    name: IMAGE_STREAM_NAMESPACE
+    value: openshift
+    required: true
+required: true
+objects:
+  - kind: Service
+    apiVersion: v1
+    spec:
+      ports:
+        - port: 8080
+          targetPort: 8080
+      selector:
+        deploymentConfig: "${APPLICATION_NAME}"
+    metadata:
+      name: "${APPLICATION_NAME}"
+      labels:
+        application: "${APPLICATION_NAME}"
+      annotations:
+        description: The rebot http port for rest endpoint.
+  - kind: Route
+    apiVersion: v1
+    id: "${APPLICATION_NAME}-http"
+    metadata:
+      name: "${APPLICATION_NAME}"
+      labels:
+        application: "${APPLICATION_NAME}"
+      annotations:
+        description: Route for rebot's rest service.
+    spec:
+      to:
+        name: "${APPLICATION_NAME}"
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      annotations:
+        template.alpha.openshift.io/wait-for-ready: "true"
+      name: "${APPLICATION_NAME}"
+      labels:
+        service: "${APPLICATION_NAME}"
+        application: "${APPLICATION_NAME}"
+    spec:
+      strategy:
+        type: Recreate
+      triggers:
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - "${APPLICATION_NAME}"
+            from:
+              kind: ImageStreamTag
+              namespace: "${IMAGE_STREAM_NAMESPACE}"
+              name: bsig-cekit-cacher:1.0-SNAPSHOT
+        - type: ConfigChange
+      replicas: 1
+      selector:
+        deploymentConfig: "${APPLICATION_NAME}"
+      template:
+        metadata:
+          name: "${APPLICATION_NAME}"
+          labels:
+            deploymentConfig: "${APPLICATION_NAME}"
+            application: "${APPLICATION_NAME}"
+        spec:
+          terminationGracePeriodSeconds: 60
+          containers:
+            - name: "${APPLICATION_NAME}"
+              image: rebot-telegram-bot
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - name: "${APPLICATION_NAME}-volume"
+                  mountPath: /opt/cacher
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 180
+                timeoutSeconds: 2
+                periodSeconds: 15
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 8080
+                  scheme: HTTP
+              ports:
+                - name: http
+                  containerPort: 8080
+                  protocol: TCP
+              env:
+                - name: CACHER_BASE_DIR
+                  value: "${CACHER_BASE_DIR}"
+                - name: CACHER_PRELOAD_FILE
+                  value: "${CACHER_PRELOAD_FILE}"
+                - name: CACHER_ENABLE_NIGHTLY_WATCHER
+                  value: "${CACHER_ENABLE_NIGHTLY_WATCHER}"
+                - name: CACHER_PRODUCT_VERSION
+                  value: "${CACHER_PRODUCT_VERSION}"
+                - name: CACHER_RHDM_URL
+                  value: "${CACHER_RHDM_URL}"
+                - name: CACHER_RHPAM_URL
+                  value: "${CACHER_RHPAM_URL}"
+                - name: CACHER_ENABLE_GITHUB_BOT
+                  value: "${CACHER_ENABLE_GITHUB_BOT}"
+                - name: CACHER_GITHUB_USERNAME
+                  value: "${CACHER_GITHUB_USERNAME}"
+                - name: CACHER_GITHUB_PASSWORD
+                  value: "${CACHER_GITHUB_PASSWORD}"
+                - name: CACHER_GITHUB_EMAIL
+                  value: "${CACHER_GITHUB_EMAIL}"
+                - name: CACHER_RHDM_UPSTREAM
+                  value: "${CACHER_RHDM_UPSTREAM}"
+                - name: CACHER_RHPAM_UPSTREAM
+                  value: "${CACHER_RHPAM_UPSTREAM}"
+                - name: CACHER_DEFAULT_BRANCH
+                  value: "${CACHER_DEFAULT_BRANCH}"
+                - name: CACHER_GITHUB_REVIEWERS
+                  value: "${CACHER_GITHUB_REVIEWERS}"
+                - name: CACHER_HANGOUTS_WEBHOOK
+                  value: "${CACHER_HANGOUTS_WEBHOOK}"
+
+          volumes:
+            - name: "${APPLICATION_NAME}-volume"
+              persistentVolumeClaim:
+                claimName: "${APPLICATION_NAME}-claim"
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: "${APPLICATION_NAME}-claim"
+      labels:
+        application: "${APPLICATION_NAME}"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi

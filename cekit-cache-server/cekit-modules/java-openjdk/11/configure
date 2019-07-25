@@ -1,0 +1,10 @@
+#!/bin/sh
+
+SCRIPT_DIR=$(dirname $0)
+
+mkdir -p /deployments
+
+echo "securerandom.source=file:/dev/urandom" >> $(find /etc/java -name java.security)
+
+cp ${SCRIPT_DIR}/added/run-java.sh /deployments/
+chmod 755 /deployments/run-java.sh
