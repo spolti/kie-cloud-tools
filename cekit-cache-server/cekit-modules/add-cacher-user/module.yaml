@@ -1,0 +1,8 @@
+schema_version: 1
+name: add-cacher-user
+execute:
+- script: add-user
+
+envs:
+- name: "CACHER_HOME"
+  value: "/home/cacher"

@@ -1,0 +1,31 @@
+schema_version: 1
+
+name: "bsig-cekit-cacher"
+version: "1.0"
+from: "registry.redhat.io/ubi8-minimal:latest"
+
+labels:
+  - name: "maintainer"
+    value: "bsig <bsig-cloud@kiegroup.org>"
+  - name: "io.openshift.expose-services"
+    value: "8080:http"
+
+modules:
+  repositories:
+    - path: cekit-modules
+  install:
+    # until this bug: https://bugzilla.redhat.com/show_bug.cgi?id=1700341
+    # is not fixed keep all rpm dependencies in a single module
+    - name: install-rpm-dependencies
+    - name: add-cacher-user
+    - name: java-openjdk
+      version: "11"
+    - name: configure-cekit-cacher
+
+packages:
+  manager: microdnf
+
+run:
+  user: 1001
+  cmd:
+    - "/deployments/run-java.sh"

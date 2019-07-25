@@ -1,0 +1,9 @@
+schema_version: 1
+name: install-rpm-dependencies
+
+packages:
+  install:
+    - shadow-utils
+    - git
+    - java-11-openjdk
+    - findutils
