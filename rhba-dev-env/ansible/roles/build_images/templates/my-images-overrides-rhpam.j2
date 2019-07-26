@@ -1,0 +1,40 @@
+# https://mojo.redhat.com/docs/DOC-1194764
+schema_version: 1
+modules:
+  repositories:
+    - name: cct_module
+      git:
+        url: {{ cct_module_repo }}
+        ref: {{ cct_module_repo_ref }}
+    - name: jboss-eap-modules
+      git:
+        url: {{ jboss_eap_modules_repo }}
+        ref: {{ jboss_eap_modules_ref }}
+    - name: jboss-eap-7-image
+      git:
+        url: {{ jboss_eap_7_image_repo }}
+        ref: {{ jboss_eap_7_image_ref }}
+    - name: rhpam-7-image
+      git:
+        url: {{ rhpam_7_image_repo }}
+        ref: {{ rhpam_7_image_ref }}
+    - name: jboss-kie-modules
+      git:
+       url: {{ jboss_kie_modules_repo }}
+       ref: {{ jboss_kie_modules_ref }}
+artifacts:
+    - name: "BUSINESS_CENTRAL_DISTRIBUTION_ZIP"
+      target: "business_central_distribution.zip"
+      md5: "{{ business_central_distribution_md5  }}"
+
+    - name: "ADD_ONS_DISTRIBUTION_ZIP"
+      target: "add_ons_distribution.zip"
+      md5: "{{ add_ons_distribution_md5 }}"
+
+    - name: "BUSINESS_CENTRAL_MONITORING_DISTRIBUTION_ZIP"
+      target: "business_central_monitoring_distribution.zip"
+      md5: "{{ business_central_monitoring_distribution_md5 }}"
+
+    - name: "KIE_SERVER_DISTRIBUTION_ZIP"
+      target: "kie_server_distribution.zip"
+      md5: "{{ kie_server_distribution_md5 }}"

@@ -1,0 +1,40 @@
+# https://mojo.redhat.com/docs/DOC-1194764
+schema_version: 1
+modules:
+  repositories:
+    - name: cct_module
+      git:
+        url: {{ cct_module_repo }}
+        ref: {{ cct_module_repo_ref }}
+    - name: jboss-eap-modules
+      git:
+        url: {{ jboss_eap_modules_repo }}
+        ref: {{ jboss_eap_modules_ref }}
+    - name: jboss-eap-7-image
+      git:
+        url: {{ jboss_eap_7_image_repo }}
+        ref: {{ jboss_eap_7_image_ref }}
+    - name: rhdm-7-image
+      git:
+        url: {{ rhdm_7_image_repo }}
+        ref: {{ rhdm_7_image_ref }}
+    - name: jboss-kie-modules
+      git:
+       url: {{ jboss_kie_modules_repo }}
+       ref: {{ jboss_kie_modules_ref }}
+artifacts:
+    - name: "DECISION_CENTRAL_DISTRIBUTION_ZIP"
+      target: "decision_central_distribution.zip"
+      md5: "{{ decision_central_distribution_md5  }}"
+
+    - name: "ADD_ONS_DISTRIBUTION_ZIP"
+      target: "add_ons_distribution.zip"
+      md5: "{{ add_ons_dm_distribution_md5 }}"
+
+    - name: "KIE_SERVER_DISTRIBUTION_ZIP"
+      target: "kie_server_distribution.zip"
+      md5: "{{ kie_server_dm_distribution_md5 }}"
+
+    - name: "EMPLOYEE_ROSTERING_DISTRIBUTION_ZIP"
+      target: "employee_rostering_distribution.zip"
+      md5: "{{ employee_rostering_distribution_md5 }}"

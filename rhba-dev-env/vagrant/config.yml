@@ -1,0 +1,8 @@
+---
+- name: workstation
+  ip: 10.0.0.119
+  memory: 8192
+  cpu: 4
+  disk: workstation.vdi
+  disk_size: 204800
+  alias: "workstation"
