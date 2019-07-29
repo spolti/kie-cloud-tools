@@ -1,0 +1,31 @@
+require 'yaml'
+disks                   = ENV['DISKS_LOCATION'] || 'storage/'  
+errors                  = []
+servers                 = YAML.load_file('config.yml')
+box_name                = ENV['BOX_NAME'] || 'fedora/30-cloud-base'
+
+Vagrant.configure("2") do |config|
+
+	servers.each do |servers|
+		config.vm.define servers["alias"] do |serv|
+	    	serv.vm.box = box_name
+			serv.vm.network :public_network, ip: servers["ip"]
+			serv.vm.hostname = servers["name"]
+			serv.vm.provider :virtualbox do |domain|
+				selected_disk = disks + servers["disk"]
+						unless File.exist?(selected_disk)
+								domain.customize ['createhd', '--filename', selected_disk, '--size', servers["disk_size"]]
+				end
+				domain.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', 1, '--device', 0,
+						'--type','hdd', '--medium', selected_disk]
+				domain.memory = servers["memory"]
+				domain.cpus   = servers["cpu"]
+
+        	end 
+    	end	
+	end
+	  
+	config.vm.provision :ansible_local do |ansible|
+		ansible.playbook = "provisioning/playbook.yml"
+	end
+end

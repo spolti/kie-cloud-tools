@@ -1,0 +1,292 @@
+---
+- name: kinit red hat kerberos
+  shell: echo "{{ kerberos_password }}" | kinit {{ kerberos_username }}@REDHAT.COM
+
+- name: create cache_hack script
+  template:
+    src: "cache-hack.j2"
+    dest: /tmp/cache-hack.sh
+
+- name: run cache artifacts
+  shell: sh /tmp/cache-hack.sh
+
+- name: create build_overrides script
+  get_url:
+    url: https://raw.githubusercontent.com/jboss-container-images/jboss-kie-modules/master/tools/build-overrides/build-overrides.sh
+    dest: /tmp/build-overrides.sh
+
+- name: run build-overrides {{ build_overrides_product }}  {{build_overrides_version}} {{ build_overrides_nightly }}
+  command: sh /tmp/build-overrides.sh -v {{build_overrides_version}} -p {{ build_overrides_product }}  -b {{ build_overrides_nightly }}
+
+- set_fact: var_build_product="{{ build_product }}" 
+            var_build_overrides_product="{{ build_overrides_product }}" 
+            var_rhpam="rhpam" 
+            var_rhdm="rhdm"
+            var_rhpam_all="rhpam-all" 
+            var_rhdm_all="rhdm-all" 
+            var_rhpam_businesscentral="rhpam-businesscentral"
+            var_rhpam_businesscentral_monitoring="rhpam-businesscentral-monitoring"
+            var_rhpam_controller="rhpam-controller"
+            var_rhpam_kieserver="rhpam-kieserver"
+            var_rhpam_smartrouter="rhpam-smartrouter"
+            var_rhdm_decisioncentral="rhdm-decisioncentral"
+            var_rhdm_controller="rhdm-controller"
+            var_rhdm_kieserver="rhdm-kieserver"
+            var_rhdm_optaweb_employee_rostering="rhdm-optaweb-employee-rostering"
+
+- name: generetate md5 from rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-business-central-eap7-deployable.zip
+  shell:
+    cmd: printf $(md5sum rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-business-central-eap7-deployable.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when:
+    - var_build_overrides_product == var_rhpam
+  register: bc_md5
+
+- name: set md5 for rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-business-central-eap7-deployable.zip
+  set_fact:
+    business_central_distribution_md5: "{{ bc_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhpam
+    - bc_md5 | trim != ''
+  
+- name: generetate md5 from rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-add-ons.zip
+  shell:
+    cmd: printf $(md5sum rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-add-ons.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhpam
+  register: add_on_md5
+
+- name: set md5 for rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-add-ons.zip
+  set_fact:
+    add_ons_distribution_md5: "{{ add_on_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhpam
+    - add_on_md5 | trim != ''
+
+- name: generetate md5 from rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-monitoring-ee7.zip
+  shell:
+    cmd: printf $(md5sum rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-monitoring-ee7.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhpam
+  register: bc_monitor_md5
+
+- name: set md5 for rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-monitoring-ee7.zip
+  set_fact:
+    business_central_monitoring_distribution_md5: "{{ bc_monitor_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhpam
+    - bc_monitor_md5 | trim != ''
+
+- name: generetate md5 from rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-kie-server-ee8.zip
+  shell:
+    cmd: printf $(md5sum rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-kie-server-ee8.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhpam
+  register: kie_md5
+
+- name: set md5 for rhpam-{{build_overrides_version}}.PAM-redhat-{{ build_overrides_nightly }}-kie-server-ee8.zip
+  set_fact:
+    kie_server_distribution_md5: "{{ kie_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhpam
+    - kie_md5 | trim != ''
+
+- name: generate override file for {{ rhpam_7_openshift_image_businesscentral_dir }}
+  template:
+    src: "my-images-overrides-rhpam.j2"
+    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_businesscentral_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral)
+
+- name: build image {{ rhpam_7_openshift_image_businesscentral_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_businesscentral_dir }}"
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral)
+    
+- name: generate override file for {{ rhpam_7_openshift_image_businesscentral_monitoring_dir }}
+  template:
+    src: "my-images-overrides-rhpam.j2"
+    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_businesscentral_monitoring_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral_monitoring)
+
+- name: build image {{ rhpam_7_openshift_image_businesscentral_monitoring_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_businesscentral_monitoring_dir}}"   
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral_monitoring)
+
+- name: generate override file for {{ rhpam_7_openshift_image_controller_dir }}
+  template:
+    src: "my-images-overrides-rhpam.j2"
+    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_controller_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_controller)
+
+- name: build image {{ rhpam_7_openshift_image_controller_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_controller_dir}}"   
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_controller)
+
+- name: generate override file for {{ rhpam_7_openshift_image_kieserver_dir }}
+  template:
+    src: "my-images-overrides-rhpam.j2"
+    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_kieserver_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_kieserver)
+
+- name: build image {{ rhpam_7_openshift_image_kieserver_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_kieserver_dir }}"   
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_kieserver)
+
+- name: generate override file for {{ rhpam_7_openshift_image_smartrouter_dir }}
+  template:
+    src: "my-images-overrides-rhpam.j2"
+    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_smartrouter_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_smartrouter)
+
+- name: build image {{ rhpam_7_openshift_image_smartrouter_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_smartrouter_dir }}" 
+  when:
+    - var_build_overrides_product == var_rhpam
+    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_smartrouter)
+
+- name: generetate md5 from rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-decision-central-eap7-deployable.zip
+  shell:
+    cmd: printf $(md5sum rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-decision-central-eap7-deployable.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhdm
+  register: dm_md5
+
+- name: set md5 for rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-decision-central-eap7-deployable.zip
+  set_fact:
+    decision_central_distribution_md5: "{{ dm_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhdm
+    - dm_md5 | trim != ''
+  
+- name: generetate md5 from rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-add-ons.zip
+  shell:
+    cmd: printf $(md5sum rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-add-ons.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhdm
+  register: add_on_md5
+
+- name: set md5 for rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-add-ons.zip
+  set_fact:
+    kie_server_dm_distribution_md5: "{{ add_on_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhdm
+    - add_on_md5 | trim != ''
+
+- name: generetate md5 from rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-kie-server-ee8.zip
+  shell:
+    cmd: printf $(md5sum rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-kie-server-ee8.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhdm
+  register: kie_md_md5
+
+- name: set md5 for rhdm-{{build_overrides_version}}.DM-redhat-{{ build_overrides_nightly }}-kie-server-ee8.zip
+  set_fact:
+    add_ons_dm_distribution_md5: "{{ kie_md_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhdm
+    - kie_md_md5 | trim != ''
+
+- name: generetate md5 from rhdm-7.4-employee-rostering.zip
+  shell:
+    cmd: printf $(md5sum rhdm-7.4-employee-rostering.zip)
+    chdir: /tmp/build-overrides/nightly/{{build_overrides_nightly}}/{{build_overrides_version}} 
+  when: var_build_overrides_product == var_rhdm
+  register: er_md_md5
+
+- name: set md5 for rhdm-7.4-employee-rostering.zip
+  set_fact:
+    employee_rostering_distribution_md5: "{{ er_md_md5.stdout }}"
+  when: 
+    - var_build_overrides_product == var_rhdm
+    - er_md_md5 | trim != ''
+
+- name: generate override file for {{ rhdm_7_openshift_image_decisioncentral_dir }}
+  template:
+    src: "my-images-overrides-rhdm.j2"
+    dest: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_decisioncentral_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_decisioncentral)  
+
+- name: build image {{ rhdm_7_openshift_image_decisioncentral_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_decisioncentral_dir }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_decisioncentral)  
+
+- name: generate override file for {{ rhdm_7_openshift_image_controller_dir }}
+  template:
+    src: "my-images-overrides-rhdm.j2"
+    dest: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_controller_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_controller)  
+
+- name: build image {{ rhdm_7_openshift_image_controller_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_controller_dir }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_controller)
+
+- name: generate override file for {{ rhdm_7_openshift_image_kieserver_dir }}
+  template:
+    src: "my-images-overrides-rhdm.j2"
+    dest: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_kieserver_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_kieserver)
+
+- name: build image {{ rhdm_7_openshift_image_kieserver_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_kieserver_dir }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_kieserver)
+
+- name: generate override file for {{ rhdm_7_openshift_image_optaweb_employee_rostering_dir }}
+  template:
+    src: "my-images-overrides-rhdm.j2"
+    dest: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_optaweb_employee_rostering_dir }}/{{ my_images_overrides_file }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_optaweb_employee_rostering)
+
+- name: build image {{ rhdm_7_openshift_image_ar_rhdm_all) or (var_build_product == var_rhdm_optaweb_employee_rostering)optaweb_employee_rostering_dir }}
+  shell: 
+    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
+    chdir: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_optaweb_employee_rostering_dir }}"
+  when:
+    - var_build_overrides_product == var_rhdm
+    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_optaweb_employee_rostering)

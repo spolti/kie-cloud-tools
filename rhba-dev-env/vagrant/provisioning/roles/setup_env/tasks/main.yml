@@ -1,0 +1,205 @@
+---
+- fail:
+    msg: "This role is only supported for Fedora hosts"
+  when: ansible_distribution != 'Fedora'
+
+- name: upgrade all packages
+  become: true
+  become_user: root
+  dnf:
+    name: "*"
+    state: latest
+- name: install the latest version of docker
+  become: true
+  become_user: root
+  dnf:
+    name: docker
+    state: latest
+
+- name: "docker storage configurations"
+  become: true
+  become_user: root
+  copy:
+    dest: /etc/sysconfig/docker-storage-setup
+    content: |
+          DEVS=/dev/sdb
+          VG=docker-vg
+
+- name: "docker storage setup"
+  become: true
+  become_user: root
+  command: docker-storage-setup 
+
+- name: "enable docker service"
+  become: true
+  become_user: root
+  service:
+   name: docker
+   enabled: yes
+
+- name: "start docker service"
+  become: true
+  become_user: root
+  service:
+   name: docker
+   state: started
+
+- name: ensure group "docker" exists
+  become: true
+  become_user: root
+  group:
+    name: docker
+    state: present
+
+- name: adding user vagrant to group docker
+  become: true
+  become_user: root
+  user:
+    name: vagrant
+    groups: docker
+    append: yes
+
+- name: add new docker configuration
+  become: true
+  become_user: root
+  template:
+    src: "registries.j2"
+    dest: /etc/containers/registries.conf
+
+- name: install cekit
+  become: true
+  become_user: root
+  dnf:
+    name: 'http://download-ib01.fedoraproject.org/pub/fedora/linux/updates/30/Everything/x86_64/Packages/c/cekit-3.2.0-1.fc30.noarch.rpm'
+    state: present    
+
+- name: install cekit packages
+  become: true
+  become_user: root
+  dnf:
+    name:
+      - python3-docker
+      - python3-behave
+      - python3-lxml
+      - python3-docker-squash
+      - odcs-client
+      - krb5-workstation
+      - fedpkg
+    state: latest
+
+- name: install useful packages
+  become: true
+  become_user: root
+  dnf:
+    name:
+      - vim
+      - wget
+      - git
+    state: latest
+
+- name: create cekit config directory
+  file:
+    path: "{{ansible_user_dir}}/.cekit"
+    state: directory
+
+- name: create cekit config
+  template:
+    src: "cekit.j2"
+    dest: "{{ansible_user_dir}}/.cekit/config"
+
+- name: create koji config directory
+  file:
+    path: "{{ansible_user_dir}}/.koji"
+    state: directory
+
+- name: create koji config
+  template:
+    src: "koji.j2"
+    dest: "{{ansible_user_dir}}/.koji/config"    
+
+- name: create kerberos configuration
+  become: true
+  become_user: root
+  template:
+    src: "krb5.j2"
+    dest: /etc/krb5.conf
+    
+- name: install the latest version of ansible
+  become: true
+  become_user: root
+  dnf:
+    name: ansible
+    state: latest
+
+- name: increase ansible timeout
+  become: true
+  become_user: root
+  lineinfile:
+    path: /etc/ansible/ansible.cfg
+    regexp: "^#timeout = 10"
+    line: "timeout = 60"
+
+- name: generate ssh keys
+  openssh_keypair:
+    path: "/home/vagrant/.ssh/id_rsa"
+    size: 2048
+
+- name: creates workspace directory
+  file:
+    path: "{{ ansible_user_dir }}/workspace"
+    state: directory
+
+- name: copy rpm redhat-internal-cert
+  become: true
+  become_user: root
+  copy:
+    src: {{internal_cert_name}}
+    dest: /tmp/{{internal_cert_name}}
+
+- name: install redhat-internal-cert
+  become: true
+  become_user: root
+  dnf:
+    name:  /tmp/{{internal_cert_name}}
+    state: present
+
+- name: add rcm tools repo for fedora
+  become: true
+  become_user: root
+  yum_repository:
+    name: rcm-tools-fedora-rpms
+    description: RCM Tools for Fedora $releasever (RPMs)
+    gpgcheck: yes
+    enabled: yes
+    gpgkey: "{{ rcm_gpgkey }}"
+    baseurl: "{{ rcm_baseurl }}"
+
+- name: install useful packages for brew
+  become: true
+  become_user: root
+  dnf:
+    name:
+      - koji
+      - brewkoji
+    state: latest
+
+- name: clone repo {{ rhpam_7_openshift_image_repo_url }}
+  git: 
+    repo: "{{ rhpam_7_openshift_image_repo_url }}"
+    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dest }}"
+    refspec: "{{ rhpam_7_openshift_image_repo_refspec }}" 
+
+- name: clone repo {{ rhdm_7_openshift_image_repo_url }}
+  git: 
+    repo: "{{ rhdm_7_openshift_image_repo_url }}"
+    dest: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dest }}"
+    refspec: "{{ rhdm_7_openshift_image_repo_refspec }}"
+
+- name: clone repo {{ ansible_rhba_repo }}
+  git: 
+    repo: "{{ ansible_rhba_repo }}"
+    dest: "{{ workspace_home }}/{{ ansible_rhba_dest }}"
+    refspec: "{{ ansible_rhba_ref }}"
+
+- name: end the play
+  meta: end_play
