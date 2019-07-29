@@ -66,20 +66,18 @@
     src: "registries.j2"
     dest: /etc/containers/registries.conf
 
-- name: enable @cekit/cekit
+- name: install cekit
   become: true
   become_user: root
-  command: dnf copr enable @cekit/cekit -y
-  args:
-    warn: false
+  dnf:
+    name: 'http://download-ib01.fedoraproject.org/pub/fedora/linux/updates/30/Everything/x86_64/Packages/c/cekit-3.2.0-1.fc30.noarch.rpm'
+    state: present    
 
-- name: install the latest version of cekit packages
+- name: install cekit packages
   become: true
   become_user: root
   dnf:
     name:
-      - cekit
-      - cekit-bash-completion
       - python3-docker
       - python3-behave
       - python3-lxml
@@ -155,14 +153,14 @@
   become: true
   become_user: root
   copy:
-    src: "redhat-internal-cert-install-0.1-7.el7.csb.noarch.rpm"
-    dest: /tmp/redhat-internal-cert-install-0.1-7.el7.csb.noarch.rpm
+    src: {{internal_cert_name}}
+    dest: /tmp/{{internal_cert_name}}
 
 - name: install redhat-internal-cert
   become: true
   become_user: root
   dnf:
-    name: /tmp/redhat-internal-cert-install-0.1-7.el7.csb.noarch.rpm
+    name:  /tmp/{{internal_cert_name}}
     state: present
 
 - name: add rcm tools repo for fedora

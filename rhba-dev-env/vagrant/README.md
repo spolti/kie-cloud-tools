@@ -117,7 +117,7 @@ Run ssh-copy-id for localhost (use the password "vagrant")
  ssh-copy-id localhost
 /usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/vagrant/.ssh/id_rsa.pub"
 The authenticity of host 'localhost (::1)' can't be established.
-ECDSA key fingerprint is SHA256:NGzRYlpK+S1jsn5CENT6V+obbav7vzAOLcOYrWcw3hs.
+ECDSA key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxx.
 Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 /usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
 /usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
@@ -143,15 +143,15 @@ Go to /home/vagrant/workspace/kie-cloud-tools/rhba-dev-env/ansible and run:
 Example to build RHPAM images
 
 ```bash
-ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhpam' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190724' -e 'build_product=rhpam-businesscentral' -e 'git_branch_target=remotes/origin/7.4.x'
+ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhpam' -e 'kerberos_username=username' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190726' -e 'build_product=rhpam-all' -e 'git_branch_target=remotes/origin/7.4.x'
 ```
 Example to build RHDM images
 
 ```bash
-ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhdm' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190724' -e 'build_product=rhdm-kieserver' -e 'git_branch_target=remotes/origin/7.4.x'
+ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhdm'-e 'kerberos_username=username' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190726' -e 'build_product=rhdm-kieserver' -e 'git_branch_target=remotes/origin/7.4.x'
 ```
 
-(do not forget to update the variable kerberos_password).
+(do not forget to update the variable kerberos_username and kerberos_password.
 
 Open another session on the terminal and run ssh to see the new images available:
 
@@ -169,10 +169,12 @@ Build Parameters
 
 "build_overrides_product" - Valid choices are: rhpam or rhdm
 
-"build_product" - Parameter for which an image is being built. Valid choices are: rhpam-all rhpam-businesscentral, rhpam-businesscentral-monitoring, rhpam-businesscentral-indexing, rhpam-controller, rhpam-kieserver, rhdm-all, rhpam-smartrouter rhdm-decisioncentral, rhdm-decisioncentral-indexing, rhdm-controller, rhdm-kieserver, rhdm-optaweb-employee-rostering
+"build_product" - Parameter for which an image is being built. Valid choices are: rhpam-all rhpam-businesscentral, rhpam-businesscentral-monitoring, rhpam-controller, rhpam-kieserver, rhdm-all, rhpam-smartrouter rhdm-decisioncentral, rhdm-controller, rhdm-kieserver, rhdm-optaweb-employee-rostering
 
 "git_branch_target" - Branch to be used for image build. (Default is remotes/origin/7.4.x)
 
 "kerberos_username" - Your kerberos username
 
 "kerberos_password" - Your kerberos password
+
+More parameters can be found in the "vars_file.yml"

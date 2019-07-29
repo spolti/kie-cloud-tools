@@ -11,8 +11,8 @@
   shell: sh /tmp/cache-hack.sh
 
 - name: create build_overrides script
-  template:
-    src: "build-overrides.j2"
+  get_url:
+    url: https://raw.githubusercontent.com/jboss-container-images/jboss-kie-modules/master/tools/build-overrides/build-overrides.sh
     dest: /tmp/build-overrides.sh
 
 - name: run build-overrides {{ build_overrides_product }}  {{build_overrides_version}} {{ build_overrides_nightly }}
@@ -26,12 +26,10 @@
             var_rhdm_all="rhdm-all" 
             var_rhpam_businesscentral="rhpam-businesscentral"
             var_rhpam_businesscentral_monitoring="rhpam-businesscentral-monitoring"
-            var_rhpam_businesscentral_indexing="rhpam-businesscentral-indexing"
             var_rhpam_controller="rhpam-controller"
             var_rhpam_kieserver="rhpam-kieserver"
             var_rhpam_smartrouter="rhpam-smartrouter"
             var_rhdm_decisioncentral="rhdm-decisioncentral"
-            var_rhdm_decisioncentral_indexing="rhdm-decisioncentral-indexing"
             var_rhdm_controller="rhdm-controller"
             var_rhdm_kieserver="rhdm-kieserver"
             var_rhdm_optaweb_employee_rostering="rhdm-optaweb-employee-rostering"
@@ -109,22 +107,6 @@
     - var_build_overrides_product == var_rhpam
     - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral)
     
-- name: generate override file for {{ rhpam_7_openshift_image_businesscentral_indexing_dir }}
-  template:
-    src: "my-images-overrides-rhpam.j2"
-    dest: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_businesscentral_indexing_dir }}/{{ my_images_overrides_file }}"
-  when:
-    - var_build_overrides_product == var_rhpam
-    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral_indexing)
-
-- name: build image {{ rhpam_7_openshift_image_businesscentral_indexing_dir }}
-  shell: 
-    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
-    chdir: "{{ workspace_home }}/{{ rhpam_7_openshift_image_repo_dir }}/{{ rhpam_7_openshift_image_businesscentral_indexing_dir }}"   
-  when:
-    - var_build_overrides_product == var_rhpam
-    - (var_build_product == var_rhpam_all) or (var_build_product == var_rhpam_businesscentral_indexing)
-
 - name: generate override file for {{ rhpam_7_openshift_image_businesscentral_monitoring_dir }}
   template:
     src: "my-images-overrides-rhpam.j2"
@@ -260,22 +242,6 @@
   when:
     - var_build_overrides_product == var_rhdm
     - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_decisioncentral)  
-
-- name: generate override file for {{ rhdm_7_openshift_image_decisioncentral_indexing_dir }}
-  template:
-    src: "my-images-overrides-rhdm.j2"
-    dest: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_decisioncentral_indexing_dir }}/{{ my_images_overrides_file }}"
-  when:
-    - var_build_overrides_product == var_rhdm
-    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_decisioncentral_indexing)  
-
-- name: build image {{ rhdm_7_openshift_image_decisioncentral_indexing_dir }}
-  shell: 
-    cmd: git checkout {{ git_branch_target }} && cekit build --overrides-file my-images-overrides.yaml docker
-    chdir: "{{ workspace_home }}/{{ rhdm_7_openshift_image_repo_dir }}/{{ rhdm_7_openshift_image_decisioncentral_indexing_dir }}"
-  when:
-    - var_build_overrides_product == var_rhdm
-    - (var_build_product == var_rhdm_all) or (var_build_product == var_rhdm_decisioncentral_indexing)  
 
 - name: generate override file for {{ rhdm_7_openshift_image_controller_dir }}
   template:
