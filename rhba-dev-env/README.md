@@ -143,12 +143,12 @@ Go to /home/vagrant/workspace/kie-cloud-tools/rhba-dev-env/ansible and run:
 Example to build RHPAM images
 
 ```bash
-ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhpam' -e 'kerberos_username=username' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190726' -e 'build_product=rhpam-all' -e 'git_branch_target=remotes/origin/7.4.x'
+ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhpam' -e 'kerberos_username=username' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190726' -e 'build_product=rhpam-all' -e 'git_branch_target=remotes/origin/7.4.x' -e 'rhpam_7_image_ref=7.4.x'
 ```
 Example to build RHDM images
 
 ```bash
-ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhdm'-e 'kerberos_username=username' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190726' -e 'build_product=rhdm-kieserver' -e 'git_branch_target=remotes/origin/7.4.x'
+ansible-playbook -i hosts play_build_images.yml -e 'build_overrides_product=rhdm'-e 'kerberos_username=username' -e 'kerberos_password=pass' -e 'build_overrides_nightly=20190726' -e 'build_product=rhdm-kieserver' -e 'git_branch_target=remotes/origin/7.4.x' -e 'rhdm_7_image_ref=7.4.x'
 ```
 
 (do not forget to update the variable kerberos_username and kerberos_password.
