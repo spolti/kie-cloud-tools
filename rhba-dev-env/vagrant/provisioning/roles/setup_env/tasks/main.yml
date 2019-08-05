@@ -66,14 +66,7 @@
     src: "registries.j2"
     dest: /etc/containers/registries.conf
 
-- name: install cekit
-  become: true
-  become_user: root
-  dnf:
-    name: 'http://download-ib01.fedoraproject.org/pub/fedora/linux/updates/30/Everything/x86_64/Packages/c/cekit-3.2.0-1.fc30.noarch.rpm'
-    state: present    
-
-- name: install cekit packages
+- name: install useful packages
   become: true
   become_user: root
   dnf:
@@ -85,22 +78,20 @@
       - odcs-client
       - krb5-workstation
       - fedpkg
-    state: latest
-
-- name: install useful packages
-  become: true
-  become_user: root
-  dnf:
-    name:
       - vim
       - wget
       - git
-    state: latest
+    state: latest    
 
 - name: create cekit config directory
   file:
     path: "{{ansible_user_dir}}/.cekit"
     state: directory
+
+- name: install cekit
+  pip:
+    name: cekit==3.2.0
+    extra_args: --user
 
 - name: create cekit config
   template:
@@ -153,7 +144,7 @@
   become: true
   become_user: root
   copy:
-    src: {{internal_cert_name}}
+    src: "{{internal_cert_name}}"
     dest: /tmp/{{internal_cert_name}}
 
 - name: install redhat-internal-cert
