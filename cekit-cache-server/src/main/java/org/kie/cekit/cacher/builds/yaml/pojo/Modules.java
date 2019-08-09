@@ -9,6 +9,7 @@ import java.util.List;
 @JsonPropertyOrder({
         "schemaVersion",
         "name",
+        "version",
         "description",
         "labels",
         "envs",
@@ -23,6 +24,7 @@ public class Modules {
     @JsonProperty("schema_version")
     private Integer schemaVersion;
     private String name;
+    private String version;
     private String description;
     private List<Label> labels = null;
     private List<Env> envs = null;
@@ -45,6 +47,14 @@ public class Modules {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public String getDescription() {

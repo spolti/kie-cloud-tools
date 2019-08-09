@@ -9,11 +9,13 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
 import org.kie.cekit.cacher.builds.yaml.pojo.Modules;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 @ApplicationScoped
@@ -29,8 +31,6 @@ public class YamlFilesHelper {
      */
     public Modules load(String file) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        mapper.enable(JsonParser.Feature.ALLOW_YAML_COMMENTS);
 
         try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(file)) {
             return mapper.readValue(stream, Modules.class);
