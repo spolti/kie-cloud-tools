@@ -20,7 +20,7 @@ build:
 	export CACHER_PRELOAD_FILE=/opt/cacher/load-from-file.txt; \
 	mvn clean package
 	sh ./prepare.sh
-	cekit -v --target=./target-cekit build ${BUILD_ENGINE}
+	BUILDAH_LAYERS=false cekit -v --target=./target-cekit build ${BUILD_ENGINE}
 	cekit -v --target=./target-cekit test behave
 	# rm -rfv ./cekit-modules/configure-cekit-cacher/module.yaml
 

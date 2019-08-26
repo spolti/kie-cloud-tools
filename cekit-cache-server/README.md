@@ -154,7 +154,7 @@ your OCP instance, i.e.:
 ```bash
 $ podman tag localhost/bsig-cekit-cacher:1.0 docker-registry-default.apps.internal.cloud/openshift/bsig-cekit-cacher:1.0
 podman login -p $(oc whoami -t)  -u unused docker-registry-default.apps.internal.cloud
-podman push docker-registry-default.apps.spolti.cloud/openshift/bsig-cekit-cacher:1.0Getting image source signatures
+podman push docker-registry-default.apps.spolti.cloud/openshift/bsig-cekit-cacher:1.0 Getting image source signatures
 Copying blob 73b5b703c4fa done
 ...
 Writing manifest to image destination

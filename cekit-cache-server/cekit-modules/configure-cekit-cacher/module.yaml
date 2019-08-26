@@ -5,4 +5,4 @@ execute:
 
 artifacts:
   - name: "cekit-cacher.jar"
-    md5: e2d39161818232c084e068ef8c98fd9e
+    md5: fcb3d08f12738bb361201bf6eeb28536

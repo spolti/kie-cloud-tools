@@ -21,7 +21,7 @@ public class UrlUtils {
             new URL(url);
             return true;
         } catch (MalformedURLException e) {
-            log.info("ERROR - Failed to validate " + url + " message: " + e.getMessage());
+            log.warning("Failed to validate " + url + " message: " + e.getMessage());
         }
         return false;
     }
