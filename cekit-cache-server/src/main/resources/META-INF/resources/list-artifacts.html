@@ -6,31 +6,50 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css">
     <link rel="stylesheet" type="text/css"
           href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://www.patternfly.org/components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="https://www.patternfly.org/components/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.0/d3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
-    <script src="https://www.patternfly.org/components/datatables/media/js/jquery.dataTables.js"></script>
-    <script src="https://www.patternfly.org/components/angular-patternfly/dist/docs/grunt-scripts/dataTables.select.js"></script>
-    <script src="https://www.patternfly.org/components/patternfly/dist/js/patternfly.dataTables.pfEmpty.min.js"></script>
-    <script src="https://www.patternfly.org/components/patternfly/dist/js/patternfly.dataTables.pfFilter.min.js"></script>
-    <script src="https://www.patternfly.org/components/patternfly/dist/js/patternfly.dataTables.pfPagination.min.js"></script>
-    <script src="https://www.patternfly.org/components/patternfly/dist/js/patternfly.dataTables.pfResize.min.js"></script>
-    <script src="https://www.patternfly.org/components/patternfly/dist/js/patternfly.dataTables.pfSelect.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/js/patternfly.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
-    <script type="text/javascript">
-        // Initialize Datatables
-        $(document).ready(function () {
-            $('.datatable').dataTable();
-        });
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly-bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    <script src="https://www.patternfly.org/v3/components/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/datatables/media/js/jquery.dataTables.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.dataTables.pfFilter.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.js"></script>
+    <script src="https://www.patternfly.org/v3/components/angular-patternfly/dist/docs/grunt-scripts/dataTables.select.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.dataTables.pfEmpty.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.dataTables.pfFilter.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.dataTables.pfPagination.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.dataTables.pfResize.min.js"></script>
+    <script src="https://www.patternfly.org/v3/components/patternfly/dist/js/patternfly.dataTables.pfSelect.min.js"></script>
+
+    <script>
+        // retry nightly build
+        function retryNightlyBuild() {
+            var element =  document.getElementById("retryResult")
+            fetch('/watcher/retry').then(response => response.text())
+                .then(result => {
+                    element.innerHTML = result
+            });
+        }
+
+        // delete artifact
         function Delete(checksum) {
-            console.log("PORAA " + checksum);
+            var values = []
+            if (! checksum) {
+                var data = $('#table1').DataTable().rows('.selected').data();
+                for (var i=0; i < data.length; i++) {
+                    values.push(data[i].checksum)
+                }
+
+            } else {
+                values.push(checksum)
+            }
+
             $.ajax({
+                contentType: "application/json; charset=utf-8",
                 type: "DELETE",
-                url: '/resource/' + checksum,
+                url: '/resource',
+                data: JSON.stringify(values),
                 async: true,
                 success: function (data) {
                     alert('Response: ' + data);
@@ -38,56 +57,38 @@
                 }
             });
         }
+    </script>
 
-        var app = angular.module("CacherManagement", []);
+    <script>
+        // fetch the resources and populate the datatable
+        fetch('/resource')
+            .then(response => response.json()).then(data => populateDataTable(data))
+    </script>
 
-        //Controller Part
-        app.controller("CacherManagementController", function ($scope, $compile, $http) {
-
-            $scope.retry = function () {
-                var method = "GET";
-                var url = "/watcher/retry";
-                $http({
-                    method: method,
-                    url: url
-                }).then(function (response) {
-                    console.log(response.data)
-                    console.log(response)
-                    $scope.retryResult = response.data;
-                });
-            };
-
-            // datatable
+    <script>
+        function populateDataTable(dataSet) {
             $(document).ready(function () {
-
-                var dataSet;
-
-                $.ajax({
-                    type: "GET",
-                    contentType: "application/json; charset=utf-8",
-                    url: '/resource',
-                    dataType: 'json',
-                    async: false,
-                    success: function (data) {
-                        dataSet = data;
-                    }
-                });
-
-                console.log(dataSet)
-
                 // DataTable Config
-
-                $("#artifactsTable").DataTable({
+                $("#table1").DataTable({
                     columns: [
+                        {
+                            data: null,
+                            className: "table-view-pf-select",
+                            render: function (data, type, full, meta) {
+                                // Select row checkbox renderer
+                                var id = "select" + meta.row;
+                                return '<label class="sr-only" for="' + id + '">Select row ' + meta.row +
+                                    '</label><input type="checkbox" id="' + id + '" name="' + id + '">';
+                            },
+                            sortable: false
+                        },
                         {data: "fileName"},
                         {data: "checksum"},
-
                         {
                             data: null,
                             className: "table-view-pf-actions",
-
                             render: function (data, type, full, meta) {
-
+                                // Inline action button renderer
                                 return '<div class="dropdown dropdown-kebab-pf">' +
                                     '<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                     '<span class="fa fa-ellipsis-v"></span></button>' +
@@ -96,10 +97,8 @@
                                     '<li><a id="deleteArtifact" href="#" onClick="javascript:Delete(\''+data.checksum+'\')" >Delete</a></li>';
                             }
                         }
+
                     ],
-                    createdRow: function (row, data, index) {
-                        $compile(row, data, index)($scope);//add this to compile the DOM
-                    },
                     data: dataSet,
                     dom: "t",
                     language: {
@@ -113,16 +112,16 @@
                             null,
                             {
                                 default: true,
-                                optionSelector: "#filterFileName",
+                                optionSelector: "#filter1",
                                 placeholder: "Filter By File Name..."
-                            },
-                            {
-                                optionSelector: "#filterChecksum",
+                            }, {
+                                optionSelector: "#filter2",
                                 placeholder: "Filter By Checksum..."
                             }
                         ],
                         paginationSelector: "#pagination1",
                         toolbarSelector: "#toolbar1",
+                        selectAllSelector: 'th:first-child input[type="checkbox"]',
                         colvisMenuSelector: '.table-view-pf-colvis-menu'
                     },
                     select: {
@@ -131,6 +130,29 @@
                     },
                 });
 
+                /**
+                 * Utility to show empty Table View
+                 *
+                 * @param {object} config - Config properties associated with a Table View
+                 * @param {object} config.data - Data set for DataTable
+                 * @param {string} config.tableSelector - Selector for the HTML table
+                 */
+                var emptyTableViewUtil = function (config) {
+                    var self = this;
+
+                    this.dt = $(config.tableSelector).DataTable(); // DataTable
+
+                    // Initialize restore rows
+                    if (this.dt.data().length === 0) {
+                        $(this.restoreRows).prop("disabled", false);
+                    }
+                };
+
+                // Initialize empty Table View util
+                new emptyTableViewUtil({
+                    data: dataSet,
+                    tableSelector: "#table1"
+                });
 
                 /**
                  * Utility to find items in Table View
@@ -149,12 +171,21 @@
 
                 // Initialize find util
                 new findTableViewUtil();
+
             });
+        }
+    </script>
+
+    <script>
+        // Initialize Datatables
+        $(document).ready(function () {
+            $('.datatable').dataTable();
         });
     </script>
 
 </head>
-<body ng-app="CacherManagement" ng-controller="CacherManagementController">
+<body>
+
 <nav class="navbar navbar-default navbar-pf" role="navigation">
     <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse-1">
@@ -190,24 +221,19 @@
                                 aria-haspopup="true" aria-expanded="false">File Name <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a href="#" id="filterFileName">File Name</a></li>
-                            <li><a href="#" id="filterChecksum">Checksum</a></li>
+                            <li><a href="#" id="filter1">File Name</a></li>
+                            <li><a href="#" id="filter2">Checksum</a></li>
                         </ul>
                     </div>
-                    <input type="text" class="form-control" placeholder="Filter By File Name..." autocomplete="off"
-                           id="filterInput">
+                    <input type="text" class="form-control" placeholder="Filter By File Name..."
+                           autocomplete="off" id="filterInput">
                 </div>
             </div>
-
-            <div class="container-fluid">
-                &nbsp;&nbsp;&nbsp;
-                <button class="btn btn-primary btn-lg"
-                        ng-click="retry()"
-                        ng-model="retry.nightly"
-                        type="submit">Retry Nightly Build
-                </button>
-                <b>&nbsp;{{retryResult}}</b>
+            <div class="form-group">
+                <button class="btn btn-default" type="button" onclick="Delete()">Delete Selected</button>
+                <button class="btn btn-default" type="button" onclick="retryNightlyBuild()">Retry Nightly Build</button>
             </div>
+            <div class="form-group"><b id="retryResult"></b></div>
 
             <div class="toolbar-pf-action-right">
                 <div class="form-group toolbar-pf-find">
@@ -229,7 +255,6 @@
                 </div>
             </div>
         </form>
-
         <div class="row toolbar-pf-results">
             <div class="col-sm-9">
                 <div class="hidden">
@@ -239,17 +264,19 @@
                     <p><a href="#">Clear All Filters</a></p>
                 </div>
             </div>
-<!--            <div class="col-sm-3 table-view-pf-select-results">-->
-<!--                <strong>0</strong> of <strong>0</strong> selected-->
-<!--            </div>-->
+            <div class="col-sm-3 table-view-pf-select-results">
+                <strong>0</strong> of <strong>0</strong> selected
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Table HTML -->
-<table class="table table-striped table-bordered table-hover" id="artifactsTable">
+<table class="table table-striped table-bordered table-hover" id="table1">
     <thead>
     <tr>
+        <th><label class="sr-only" for="selectAll">Select all rows</label>
+            <input type="checkbox" id="selectAll" name="selectAll"></th>
         <th>File Name</th>
         <th>Checksum</th>
         <th colspan="2">Actions</th>
@@ -261,8 +288,8 @@
     <div class="form-group">
         <select class="selectpicker pagination-pf-pagesize">
             <option value="6">6</option>
-            <option value="10" selected="selected">10</option>
-            <option value="15">15</option>
+            <option value="10">10</option>
+            <option value="15" selected="selected">15</option>
             <option value="25">25</option>
             <option value="50">50</option>
         </select>
@@ -293,7 +320,8 @@
         No Artifacts found
     </h1>
     <p>
-        Learn more about this cekit cacher <a href="https://github.com/spolti/quarkus-cekit-cacher/README.md">in the
+        Learn more about this cekit cacher <a
+            href="https://github.com/kiegroup/kie-cloud-tools/tree/master/cekit-cache-server/README.md">in the
         documentation</a>.
     </p>
     <div class="blank-slate-pf-main-action">
@@ -302,13 +330,13 @@
         </a>
 
         <button class="btn btn-primary btn-lg"
-                ng-click="retry()"
-                ng-model="retry.nightly"
+                id="retryNightlyBuild"
+                onclick="retryNightlyBuild()"
                 type="submit">Retry Nightly Build
         </button>
     </div>
-    <b>{{retryResult}}</b>
+    <b id="retryResult"></b>
 </div>
-
 </body>
 </html
+

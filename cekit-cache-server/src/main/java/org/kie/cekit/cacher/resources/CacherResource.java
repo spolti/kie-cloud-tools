@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.lang.invoke.MethodHandles;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.logging.Logger;
 
 @Path("/resource")
@@ -65,14 +66,18 @@ public class CacherResource {
 
     @DELETE
     @Produces(MediaType.TEXT_PLAIN)
-    @Path("/{checksum}")
-    public Response deleteArtifact(@PathParam("checksum") String checksum) {
-        log.info("Trying to delete artifact " + checksum);
-        if (cacherUtils.deleteArtifact(checksum)) {
-            return Response.ok().entity("File " + checksum + " deleted").build();
-        } else {
-            return Response.ok().entity("Fail to delete " + checksum).build();
+    public Response deleteArtifact(List<String> checksum) {
+        StringBuilder response = new StringBuilder("\n");
+        for (String ck : checksum) {
+            log.info("file received for deletion " + ck);
+            if (cacherUtils.deleteArtifact(ck)) {
+               response.append("File " + ck + " deleted.\n");
+            } else {
+                response.append("Fail to delete " + ck + ".\n");
+            }
         }
+        return Response.ok().entity(response.toString()).build();
+
     }
 
     @GET
