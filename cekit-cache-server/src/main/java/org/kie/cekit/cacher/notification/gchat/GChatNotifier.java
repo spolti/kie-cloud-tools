@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @ApplicationScoped
-public class HangoutsChatNotifier implements Notification {
+public class GChatNotifier implements Notification {
 
     private Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
     private final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -38,7 +38,7 @@ public class HangoutsChatNotifier implements Notification {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.code() == 200) {
-                log.fine("Hangout chat notification sent.");
+                log.fine("Google chat notification sent.");
             } else {
                 log.fine("Failed to send notification " + response.body().string());
             }

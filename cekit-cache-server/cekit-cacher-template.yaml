@@ -71,9 +71,9 @@ parameters:
     description: "The Google Chats user id, just use the ID in this field, ignore the 'user/' prefix"
     name: CACHER_GITHUB_REVIEWERS
     required: false
-  - displayName: Cacher Hangouts Webhook
-    description: "The Google hangout webhook for a target room or chat, can be obtained on the room"
-    name: CACHER_HANGOUTS_WEBHOOK
+  - displayName: Cacher GChat Webhook
+    description: "The Google chat webhook for a target room or chat, can be obtained on the room"
+    name: CACHER_GCHAT_WEBHOOK
     required: false
   - displayName: ImageStream Namespace
     description: "Namespace in which the ImageStreams for Cacher image is installed"
@@ -195,8 +195,8 @@ objects:
                   value: "${CACHER_DEFAULT_BRANCH}"
                 - name: CACHER_GITHUB_REVIEWERS
                   value: "${CACHER_GITHUB_REVIEWERS}"
-                - name: CACHER_HANGOUTS_WEBHOOK
-                  value: "${CACHER_HANGOUTS_WEBHOOK}"
+                - name: CACHER_GCHAT_WEBHOOK
+                  value: "${CACHER_GCHAT_WEBHOOK}"
 
           volumes:
             - name: "${APPLICATION_NAME}-volume"

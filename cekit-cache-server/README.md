@@ -31,7 +31,7 @@ org.kie.cekit.cacher.github.default.branch - rhpam and rhdm upstream default bra
 
 # google chat room webhook conf
 # be sure to scape special characters
-org.kie.cekit.cacher.hangouts.webhook - The Google hangout webhook for a target room or chat, can be obtained on the room.
+org.kie.cekit.cacher.gchat.webhook - The Google Chat webhook for a target room or chat, can be obtained on the room.
 that you want to send notification.
 ```
 
