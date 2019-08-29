@@ -88,10 +88,10 @@ public class PullRequestSender {
                 message.append("\n");
                 message.append(notification.link(object.getString("html_url"), "Click here to access the Pull Request"));
                 message.append("\n");
-                message.append(notification.mention(cacherProperties.githubReviewers()));
+                message.append("Reviewers please take a look: " + notification.mention(cacherProperties.githubReviewers()));
 
                 log.fine(message.toString());
-                notification.send(message.toString(), cacherProperties.hangoutsWebhook());
+                notification.send(message.toString(), cacherProperties.gChatWebhook());
                 return true;
             } else {
                 message.append("Failed to created PR against ");
@@ -99,14 +99,14 @@ public class PullRequestSender {
                 message.append(notification.monospaceBlock(object.getString("message") +
                         ". Reason: " + object.getJsonArray("errors").getJsonObject(0).getString("message")));
 
-                notification.send(message.toString(), cacherProperties.hangoutsWebhook());
+                notification.send(message.toString(), cacherProperties.gChatWebhook());
 
                 return false;
             }
 
         } catch (final Exception e) {
             notification.send("Failed to submit PR against " + repo + " - *reason: " + notification.bold(e.getMessage()),
-                    cacherProperties.hangoutsWebhook() + "*");
+                    cacherProperties.gChatWebhook() + "*");
             e.printStackTrace();
             return false;
         }

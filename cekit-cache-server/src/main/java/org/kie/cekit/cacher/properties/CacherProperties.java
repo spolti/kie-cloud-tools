@@ -63,8 +63,8 @@ public class CacherProperties {
     String version;
 
     @Inject
-    @CacherProperty(name = "org.kie.cekit.cacher.hangouts.webhook")
-    String hangoutsWebhook;
+    @CacherProperty(name = "org.kie.cekit.cacher.gchat.webhook")
+    String gChatWebhook;
 
     @Inject
     @CacherProperty(name = "org.kie.cekit.cacher.enable.nightly.watcher")
@@ -194,10 +194,10 @@ public class CacherProperties {
     }
 
     /**
-     * @return hangout webhook address to send notifications
+     * @return Google Chat webhook address to send notifications
      */
-    public String hangoutsWebhook() {
-        return hangoutsWebhook;
+    public String gChatWebhook() {
+        return gChatWebhook;
     }
 
     /**

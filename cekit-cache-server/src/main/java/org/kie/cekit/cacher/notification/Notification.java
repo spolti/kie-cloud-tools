@@ -3,10 +3,10 @@ package org.kie.cekit.cacher.notification;
 public interface Notification {
 
     /**
-     * Exposes notification method for hangout chat, webhook is required.
+     * Exposes notification method for Google chat, webhook is required.
      *
      * @param message
-     * @param webhook - Enables the incoming webhook for hangouts chat notification
+     * @param webhook - Enables the incoming webhook for Google chat notification
      *                it should be enabled by room.
      */
     void send(String message, String webhook);
@@ -79,7 +79,7 @@ public interface Notification {
      * @return mention formatted text
      */
     default String mention(String[] userIds) {
-        StringBuilder text = new StringBuilder("Reviewers please take a look:");
+        StringBuilder text = new StringBuilder();
         for (String userId : userIds) {
             text.append( " <users/" + userId + ">");
         }
