@@ -26,6 +26,7 @@ public class CacherLifecyle {
         log.info("Quarkus CEKit Cacher is starting, performing startup verifications...");
         cacherUtils.startupVerifications();
         gitRepository.prepareLocalGitRepo();
+        cacherUtils.preLoadFromFile();
     }
 
     void onStop(@Observes ShutdownEvent ev) {
