@@ -109,11 +109,11 @@ public class GitRepository {
         // only rebase if the last rebase happened in the last hour, or force it
         if ((cacherProperties.isGHBotEnabled() && lastRebase.plusHours(1).isBefore(LocalDateTime.now())) || forceRebase) {
             log.info("Rebasing rhdm-7-image git repository...");
-            run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "fetch", "upstream", "master"});
+            run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "fetch", "upstream"});
             run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "rebase", "upstream/master"});
 
             log.info("Rebasing rhpam-7-image git repository...");
-            run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "fetch", "upstream", "master"});
+            run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "fetch", "upstream"});
             run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "rebase", "upstream/master"});
 
             lastRebase = LocalDateTime.now();

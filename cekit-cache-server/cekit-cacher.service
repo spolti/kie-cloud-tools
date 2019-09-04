@@ -1,0 +1,14 @@
+[Unit]
+Description=CEKit Cacher Server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/mnt/cekit-cacher-storage/data/cacher.pid
+EnvironmentFile=-/mnt/cekit-cacher-storage/data/cacher.envs
+ExecStart=/mnt/cekit-cacher-storage/data/cekit-cacher-service.sh start
+ExecReload=/mnt/cekit-cacher-storage/data/ restart
+ExecStop=/mnt/cekit-cacher-storage/data/ stop
+
+[Install]
+WantedBy=multi-user.target
