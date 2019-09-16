@@ -10,7 +10,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <okhttp.version>3.14.2</okhttp.version>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <quarkus.version>0.21.0</quarkus.version>
+    <quarkus.version>0.21.1</quarkus.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jackson.version>2.9.9</jackson.version>
   </properties>

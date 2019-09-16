@@ -51,8 +51,9 @@ Note that, to run the tests, a few parameters will be needed, the tests will run
 
 ```bash
 export CACHER_BASE_DIR=/tmp/cacher/data; \
+export CACHER_PRODUCT_VERSION=7.8; \
 export CACHER_ENABLE_GITHUB_BOT=true; \
-export CACHER_GITHUB_USERNAME=bsig-gh-bot \
+export CACHER_GITHUB_USERNAME=bsig-gh-bot; \
 export CACHER_GITHUB_PASSWORD=password; \
 export CACHER_GITHUB_EMAIL=emailg@gmail.com; \
 export CACHER_RHDM_URL=https://url; \
@@ -60,7 +61,7 @@ export CACHER_RHPAM_URL=https://url; \
 export CACHER_RHDM_UPSTREAM=https://github.com/jboss-container-images/rhdm-7-image.git; \
 export CACHER_RHPAM_UPSTREAM=https://github.com/jboss-container-images/rhpam-7-image.git; \
 export CACHER_DEFAULT_BRANCH=master; \
-export CACHER_GITHUB_REVIEWERS="user/ignore" \
+export CACHER_GITHUB_REVIEWERS="user/ignore"; \
 export CACHER_PRELOAD_FILE=/opt/cacher/load-from-file.txt
 ```
 
@@ -175,7 +176,7 @@ From the web UI you can:
 - see the list of artifacts persisted or in the *Downloading* status
 - Download a single artifact
 - Delete single artifact
-- trigger new nightly build retry.
+- trigger new nightly build.
 
 
 ### Interacting with CEKit Cache Server through rest API
@@ -188,4 +189,6 @@ The Cacher exposes a few actions through rest API, you see all of them with the 
 
 **Temp files** - there is a timer that runs once a day which will remove all files older than 1 day.
 
-**Retry specific build date** - there is a endpoint for this purpose:  ` GET /watcher/{buildDate}`
+**Retry specific build date** - there is a endpoint for this purpose:  `GET /watcher/{buildDate}`
+
+**Retry specific build date with custom branch and version** - `GET /watcher/try/{version}/{branch}/{buildDate}`

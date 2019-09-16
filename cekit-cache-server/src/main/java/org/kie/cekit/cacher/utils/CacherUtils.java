@@ -54,12 +54,13 @@ public class CacherUtils {
             Files.walk(Paths.get(cacherProperties.getArtifactsTmpDir()))
                     .map(Path::toFile)
                     .forEach(file -> {
-                        if (file.lastModified() <= elegibleForDeletion) {
-                            log.info("Deleting file" + file.getAbsolutePath());
-                            file.delete();
+                        if (file.lastModified() <= elegibleForDeletion && file.isFile()) {
+                            if (file.delete()){
+                                log.info("File Deleted --> " + file.getAbsolutePath());
+                            }
                         }
                     });
-        } catch (IOException e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
@@ -78,9 +79,11 @@ public class CacherUtils {
                 String line;
                 while ((line = br.readLine()) != null) {
                     String finalLine = line;
-                    new Thread(() -> {
-                        log.info(fetchFile(finalLine));
-                    }).start();
+                    if (!fileExistsByNameExcludeTmp(UrlUtils.getFileName(finalLine))) {
+                        new Thread(() -> {
+                            log.info(fetchFile(finalLine));
+                        }).start();
+                    }
                 }
             } catch (IOException e) {
                 log.warning("Failed to read file: " + e.getCause());
@@ -255,7 +258,7 @@ public class CacherUtils {
 
         try {
             artifacts = Files.walk(path).filter(Files::isRegularFile)
-                    .map(p -> new PlainArtifact(p.getFileName().toString(), p.getParent().getFileName().toString(), null))
+                    .map(p -> new PlainArtifact(p.getFileName().toString(), p.getParent().getFileName().toString(), null, null, null))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();
