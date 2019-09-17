@@ -44,10 +44,10 @@ public class PullRequestSender {
      * @param prTittle
      * @param prDescription
      */
-    public boolean performPullRequest(String repo, String targetBranch, String prTittle, String prDescription) {
+    public boolean performPullRequest(String repo, String baseBranch, String targetBranch, String prTittle, String prDescription) {
 
         return sendPR(String.format(GIT_HUB_API_ENDPOINT, repo),
-                String.format(JSON_PAYLOAD, prTittle, prDescription, cacherProperties.defaultBranch(), cacherProperties.githubUsername(), targetBranch),
+                String.format(JSON_PAYLOAD, prTittle, prDescription, baseBranch, cacherProperties.githubUsername(), targetBranch),
                 repo);
     }
 

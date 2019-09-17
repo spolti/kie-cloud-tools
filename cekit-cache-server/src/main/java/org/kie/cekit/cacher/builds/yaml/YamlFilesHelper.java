@@ -5,17 +5,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
 import org.kie.cekit.cacher.builds.yaml.pojo.Modules;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 @ApplicationScoped
@@ -37,7 +34,7 @@ public class YamlFilesHelper {
 
         } catch (final Exception e) {
             log.fine("Failed to lookup " + file + " on Thread Context Class loader, trying from filesystem.");
-            try (InputStream inputStream =  new FileInputStream(file)) {
+            try (InputStream inputStream = new FileInputStream(file)) {
                 return mapper.readValue(inputStream, Modules.class);
 
             } catch (final Exception ex) {
@@ -50,6 +47,7 @@ public class YamlFilesHelper {
 
     /**
      * Write the changes on the target yaml file.
+     *
      * @param module
      * @param fileDestination
      */

@@ -82,8 +82,9 @@ public class GitRepository {
 
                 run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "remote", "add", "upstream", cacherProperties.rhpamUpstream()});
             }
-            checkoutDesiredBranch();
-            gitRebase();
+            gitRebase(cacherProperties.defaultBranch());
+            checkoutDesiredBranch(cacherProperties.defaultBranch());
+
         } else {
             log.info("Github integration bot is disabled.");
         }
@@ -92,9 +93,9 @@ public class GitRepository {
     /**
      * make sure to checkout the default git branch
      */
-    private void checkoutDesiredBranch() throws IOException, InterruptedException {
-        run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "checkout", cacherProperties.defaultBranch()});
-        run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "checkout", cacherProperties.defaultBranch()});
+    private void checkoutDesiredBranch(String branch) throws IOException, InterruptedException {
+        run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "checkout", branch});
+        run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "checkout", branch});
     }
 
     /**
@@ -105,16 +106,20 @@ public class GitRepository {
      * local repos.
      */
     @Scheduled(every = "24h", delay = 24, delayUnit = TimeUnit.HOURS)
-    public void gitRebase() throws IOException, InterruptedException {
+    public void gitScheduledRebase() throws IOException, InterruptedException {
+        gitRebase(cacherProperties.defaultBranch());
+    }
+
+    public void gitRebase(String branch) throws IOException, InterruptedException {
         // only rebase if the last rebase happened in the last hour, or force it
         if ((cacherProperties.isGHBotEnabled() && lastRebase.plusHours(1).isBefore(LocalDateTime.now())) || forceRebase) {
             log.info("Rebasing rhdm-7-image git repository...");
             run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "fetch", "upstream"});
-            run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "rebase", "upstream/master"});
+            run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "rebase", "upstream/" + branch});
 
             log.info("Rebasing rhpam-7-image git repository...");
             run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "fetch", "upstream"});
-            run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "rebase", "upstream/master"});
+            run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "rebase", "upstream/" + branch});
 
             lastRebase = LocalDateTime.now();
         } else {
@@ -129,12 +134,13 @@ public class GitRepository {
      *
      * @return {@link String currentBuildDate}
      */
-    public String getCurrentProductBuildDate() throws IOException, InterruptedException {
+    public String getCurrentProductBuildDate(String branch) throws IOException, InterruptedException {
 
         Pattern buildDatePattern = Pattern.compile("(\\d{8})");
         // rebase before
         forceRebase = false;
-        gitRebase();
+        checkoutDesiredBranch(branch);
+        gitRebase(branch);
 
         String optawebDateBuild = yamlFilesHelper
                 .load(cacherProperties.getGitDir() + "/rhdm-7-image/optaweb-employee-rostering/modules/optaweb-employee-rostering/module.yaml")
@@ -177,7 +183,7 @@ public class GitRepository {
      * commit the changes to the current branch and push the commit to GitHUb
      * @param repo - git repository name
      * @param message - Commit message
-     * @return true if the git add command was successfully executed, otherwise, fase.
+     * @return true if the git add command was successfully executed, otherwise, false.
      */
     public boolean commitChanges(String repo, String branch, String message) {
         try {
@@ -195,18 +201,23 @@ public class GitRepository {
      *
      * @param operation
      * @param branchName - branch  name
+     * @param baseBranch - base branch to push a pull request
      * @param repo target repository, available are rhpam-7-image and rhdm-7-image
      */
-    public void handleBranch(BranchOperation operation, String branchName, String repo) throws IOException, InterruptedException {
+    public void handleBranch(BranchOperation operation, String branchName, String baseBranch, String repo) throws IOException, InterruptedException {
 
         switch (operation) {
             case NEW_BRANCH:
                 if (repo.equals("rhpam-7-image")) {
+                    checkoutDesiredBranch(baseBranch);
+                    gitRebase(baseBranch);
                     log.fine("Creating new branch for rhpam-7-image. Branch name ->  " + branchName);
-                    run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "checkout", "-b", branchName, cacherProperties.defaultBranch()});
+                    run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "checkout", "-b", branchName, baseBranch});
                 } else if (repo.equals("rhdm-7-image")) {
+                    checkoutDesiredBranch(baseBranch);
+                    gitRebase(baseBranch);
                     log.fine("Creating new branch for rhdm-7-image. Branch name ->  " + branchName);
-                    run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "checkout", "-b", branchName, cacherProperties.defaultBranch()});
+                    run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "checkout", "-b", branchName, baseBranch});
                 }
                 break;
 
@@ -236,12 +247,14 @@ public class GitRepository {
     public void cleanGitRepos() throws Exception {
         log.fine("Cleaning git repositories");
         Path path = Paths.get(cacherProperties.getGitDir());
-        Files.walk(path).map(Path::toFile)
-                // sort it on the reverse order so directories can be deleted.
-                .sorted((o1, o2) -> -o1.compareTo(o2))
-                .peek(f -> log.finest("Deleting " + f))
-                .forEach(File::delete);
-        log.fine("Cleaning git repositories - done");
+        if (Files.exists(path)) {
+            Files.walk(path).map(Path::toFile)
+                    // sort it on the reverse order so directories can be deleted.
+                    .sorted((o1, o2) -> -o1.compareTo(o2))
+                    .peek(f -> log.finest("Deleting " + f))
+                    .forEach(File::delete);
+            log.fine("Cleaning git repositories - done");
+        }
     }
 
     /**
@@ -252,7 +265,7 @@ public class GitRepository {
      */
     private void run(String workDir, String... command) throws IOException, InterruptedException {
 
-        log.fine("Trying to execute the command: " + Arrays.asList(command));
+        log.fine("Trying to execute the command: " + Arrays.asList(command) + " on work dir: " + workDir);
 
         ProcessBuilder builder = new ProcessBuilder().inheritIO();
 

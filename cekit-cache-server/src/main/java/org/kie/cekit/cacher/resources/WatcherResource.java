@@ -38,19 +38,36 @@ public class WatcherResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{buildDate}")
-    public Response listArtifacts(@PathParam("buildDate") String buildDate) {
+    public Response retryNightlyBuild(@PathParam("buildDate") String buildDate) {
+
         if (cacherProperties.isWatcherEnabled()) {
-            log.info("Manually retrying build date " + buildDate);
-
-            nightlyBuildsWatcher.verifyNightlyBuild(Optional.of(buildDate));
-
-            StringBuilder responseMsg = new StringBuilder();
-            responseMsg.append("A new request to search for nightly builds\n");
-            responseMsg.append("using the build date [" + buildDate + "] was made\n");
-            responseMsg.append("If found it will be showed on the artifact list with\n");
-            responseMsg.append("Downloading status.");
-            return Response.ok().entity(responseMsg.toString()).build();
+            nightlyBuildsWatcher.verifyNightlyBuild(Optional.empty(), Optional.empty(), Optional.of(buildDate));
+            return Response.ok().entity(responseMessage(buildDate)).build();
         }
         return Response.ok().entity("Watcher is disabled").build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/try/{version}/{branch}/{buildDate}")
+    public Response retryNightlyBuildWithBranch(@PathParam("version") String version,
+                                                @PathParam("branch") String branch,
+                                                @PathParam("buildDate") String buildDate) {
+
+        if (cacherProperties.isWatcherEnabled()) {
+            nightlyBuildsWatcher.verifyNightlyBuild(Optional.of(version), Optional.of(branch), Optional.of(buildDate));
+            return Response.ok().entity(responseMessage(buildDate)).build();
+        }
+        return Response.ok().entity("Watcher is disabled").build();
+    }
+
+    private String responseMessage(String buildDate) {
+        StringBuilder responseMsg = new StringBuilder();
+        responseMsg.append("A new request to search for nightly builds\n");
+        responseMsg.append("using the build date [" + buildDate + "] was made\n");
+        responseMsg.append("If found it will be showed on the artifact list with\n");
+        responseMsg.append("Downloading status.");
+        return responseMsg.toString();
+
     }
 }

@@ -187,6 +187,16 @@ public class CacherProperties {
     }
 
     /**
+     * @return rhpam/dm product shortened version
+     */
+    public String shortenedVersion(String customVersion) {
+        if (null == customVersion || customVersion.isEmpty()) {
+            return version.substring(0,3);
+        }
+        return customVersion.substring(0,3);
+    }
+
+    /**
      * @return rhpam/dm product version
      */
     public String version() {

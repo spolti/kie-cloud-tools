@@ -75,14 +75,14 @@ public class CacherUtilsTest {
                 .forEach(file ->
                 {
                     try {
-                        File f = Files.createDirectory(Paths.get(file)).toFile();
+                        File f = Files.createFile(Paths.get(file)).toFile();
                         f.setLastModified(yesterday.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
 
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
-        Files.createDirectory(Paths.get(cacherProperties.getArtifactsTmpDir() + "/file3.txt"));
+        Files.createFile(Paths.get(cacherProperties.getArtifactsTmpDir() + "/file3.txt"));
 
         cacherUtils.cleanTmpFiles();
 
@@ -92,6 +92,8 @@ public class CacherUtilsTest {
         Assertions.assertFalse(Paths.get(cacherProperties.getArtifactsTmpDir() + "/file2-1day-old.txt").toFile().exists());
         // file-3 should not be deleted
         Assertions.assertTrue(Paths.get(cacherProperties.getArtifactsTmpDir() + "/file3.txt").toFile().exists());
+        // tmp dir should exist after the files are deleted
+        Assertions.assertTrue(Files.exists(Paths.get(cacherProperties.getArtifactsTmpDir()).toAbsolutePath()));
 
     }
 
