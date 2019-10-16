@@ -49,6 +49,9 @@ public class YamlFilesLoaderTest {
         Modules smartrouter = yamlFilesHelper.load(cacherProperties.getGitDir() +
                 "/rhpam-7-image/smartrouter/modules/smartrouter/module.yaml");
 
+        Modules processMigration = yamlFilesHelper.load(cacherProperties.getGitDir() +
+                                                           "/rhpam-7-image/process-migration/modules/process-migration/module.yaml");
+
         Assertions.assertNotNull(bcMonitoring);
         Assertions.assertEquals("rhpam-7-businesscentral-monitoring", bcMonitoring.getName());
 
@@ -64,6 +67,9 @@ public class YamlFilesLoaderTest {
         Assertions.assertNotNull(smartrouter);
         Assertions.assertEquals("rhpam-7-smartrouter", smartrouter.getName());
 
+        Assertions.assertNotNull(processMigration);
+        Assertions.assertEquals("rhpam-7-process-migration", processMigration.getName());
+
     }
 
     @Test
@@ -78,9 +84,6 @@ public class YamlFilesLoaderTest {
         Modules kieserver = yamlFilesHelper.load(cacherProperties.getGitDir() +
                 "/rhdm-7-image/kieserver/modules/kieserver/module.yaml");
 
-        Modules optaweb = yamlFilesHelper.load(cacherProperties.getGitDir() +
-                "/rhdm-7-image/optaweb-employee-rostering/modules/optaweb-employee-rostering/module.yaml");
-
         Assertions.assertNotNull(controller);
         Assertions.assertEquals("rhdm-7-controller", controller.getName());
 
@@ -89,9 +92,6 @@ public class YamlFilesLoaderTest {
 
         Assertions.assertNotNull(kieserver);
         Assertions.assertEquals("rhdm-7-kieserver", kieserver.getName());
-
-        Assertions.assertNotNull(optaweb);
-        Assertions.assertEquals("rhdm-7-optaweb-employee-rostering", optaweb.getName());
 
     }
 

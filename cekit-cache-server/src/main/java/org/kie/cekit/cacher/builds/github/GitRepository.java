@@ -1,12 +1,5 @@
 package org.kie.cekit.cacher.builds.github;
 
-import io.quarkus.scheduler.Scheduled;
-import org.kie.cekit.cacher.builds.yaml.YamlFilesHelper;
-import org.kie.cekit.cacher.builds.yaml.pojo.Env;
-import org.kie.cekit.cacher.properties.CacherProperties;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -16,10 +9,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import io.quarkus.scheduler.Scheduled;
+import org.kie.cekit.cacher.builds.yaml.YamlFilesHelper;
+import org.kie.cekit.cacher.builds.yaml.pojo.Env;
+import org.kie.cekit.cacher.properties.CacherProperties;
 
 /**
  * Holds all Git operations
@@ -84,7 +86,6 @@ public class GitRepository {
             }
             gitRebase(cacherProperties.defaultBranch());
             checkoutDesiredBranch(cacherProperties.defaultBranch());
-
         } else {
             log.info("Github integration bot is disabled.");
         }
@@ -130,8 +131,7 @@ public class GitRepository {
     /**
      * Verify one RHDM and RHPAM file that is usually updated:
      * CacherUtils.CACHER_GIT_DIR + "/rhpam-7-image/kieserver/modules/kieserver/module.yaml"
-     * CacherUtils.CACHER_GIT_DIR + "/rhdm-7-image/optaweb-employee-rostering/modules/optaweb-employee-rostering/module.yaml"
-     *
+     * CacherUtils.CACHER_GIT_DIR + "/rhdm-7-image/kieserver/modules/kieserver/module.yaml"
      * @return {@link String currentBuildDate}
      */
     public String getCurrentProductBuildDate(String branch) throws IOException, InterruptedException {
@@ -142,22 +142,27 @@ public class GitRepository {
         checkoutDesiredBranch(branch);
         gitRebase(branch);
 
-        String optawebDateBuild = yamlFilesHelper
-                .load(cacherProperties.getGitDir() + "/rhdm-7-image/optaweb-employee-rostering/modules/optaweb-employee-rostering/module.yaml")
-                .getEnvs().stream().filter(env -> env.getName().equals("EMPLOYEE_ROSTERING_DISTRIBUTION_WAR"))
-                .map(Env::getValue)
-                .findFirst().orElse(null);
+        String rhdmFilter = String.format("# rhdm-%s.DM-redhat", cacherProperties.version());
+        String rhdmKieServerDateBuild = yamlFilesHelper
+                .loadRawData(cacherProperties.getGitDir() + "/rhdm-7-image/kieserver/modules/kieserver/module.yaml")
+                .stream()
+                .filter(line -> line.contains(rhdmFilter))
+                .findFirst().get();
 
-        String kieServerdataBuild = yamlFilesHelper
-                .load(cacherProperties.getGitDir() + "/rhpam-7-image/kieserver/modules/kieserver/module.yaml")
-                .getEnvs().stream().filter(env -> env.getName().equals("JBPM_WB_KIE_SERVER_BACKEND_JAR"))
-                .map(Env::getValue)
-                .findFirst().orElse(null);
+        String rhpamFilter = String.format("# rhpam-%s.PAM-redhat", cacherProperties.version());
+        String rhpamKieServerDateBuild = yamlFilesHelper
+                .loadRawData(cacherProperties.getGitDir() + "/rhpam-7-image/kieserver/modules/kieserver/module.yaml")
+                .stream()
+                .filter(line -> line.contains(rhpamFilter))
+                .findFirst().get();
 
-        Matcher matcher = buildDatePattern.matcher(optawebDateBuild);
-        Matcher matcher1 = buildDatePattern.matcher(kieServerdataBuild);
+        Matcher matcher = buildDatePattern.matcher(rhdmKieServerDateBuild);
+        Matcher matcher1 = buildDatePattern.matcher(rhpamKieServerDateBuild);
         if (matcher.find() && matcher1.find()) {
+            log.fine("Matchers found... Proceeding with the groups validation...");
+            System.out.println("Matcher group " + matcher.group() + "  Matcher1 group " + matcher1.group());
             if (matcher.group().equals(matcher1.group())) {
+                log.fine("Build date validation succeed, current build date is: " + matcher.group());
                 return matcher.group();
             }
         }
@@ -166,12 +171,12 @@ public class GitRepository {
 
     /**
      * Add the file changes to be commited.
-     * @param repo  - git repository name
+     * @param repo - git repository name
      * @return true if the git add command was successfully executed, otherwise, fase.
      */
     public boolean addChanges(String repo) {
         try {
-            run(cacherProperties.getGitDir() + "/" + repo,  new String[]{"git", "add", "--all"});
+            run(cacherProperties.getGitDir() + "/" + repo, new String[]{"git", "add", "--all"});
             return true;
         } catch (final Exception e) {
             e.printStackTrace();
@@ -187,8 +192,8 @@ public class GitRepository {
      */
     public boolean commitChanges(String repo, String branch, String message) {
         try {
-            run(cacherProperties.getGitDir() + "/" + repo,  new String[]{"git", "commit", "-am", message});
-            run(cacherProperties.getGitDir() + "/" + repo,  new String[]{"git", "push", "origin", branch});
+            run(cacherProperties.getGitDir() + "/" + repo, new String[]{"git", "commit", "-am", message});
+            run(cacherProperties.getGitDir() + "/" + repo, new String[]{"git", "push", "origin", branch});
             return true;
         } catch (final Exception e) {
             e.printStackTrace();
@@ -198,7 +203,6 @@ public class GitRepository {
 
     /**
      * Handle branch see {@link BranchOperation} for all supported operations
-     *
      * @param operation
      * @param branchName - branch  name
      * @param baseBranch - base branch to push a pull request
@@ -226,7 +230,6 @@ public class GitRepository {
                     log.fine("Deleting branch " + branchName + " for rhpam-7-image.");
                     run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "checkout", cacherProperties.defaultBranch()});
                     run(cacherProperties.getGitDir() + "/rhpam-7-image", new String[]{"git", "branch", "-D", branchName});
-
                 } else if (repo.equals("rhdm-7-image")) {
                     log.fine("Deleting branch " + branchName + " for rhdm-7-image.");
                     run(cacherProperties.getGitDir() + "/rhdm-7-image", new String[]{"git", "checkout", cacherProperties.defaultBranch()});
@@ -259,7 +262,6 @@ public class GitRepository {
 
     /**
      * OS command executor, it executes commands on the base working dir
-     *
      * @param workDir
      * @param command
      */
@@ -280,7 +282,6 @@ public class GitRepository {
         if (exitCode != 0) {
             throw new RuntimeException("Failed to execute command " + Arrays.asList(command) + ", exit code is " + exitCode);
         }
-
     }
 }
 

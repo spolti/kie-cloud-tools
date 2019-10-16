@@ -1,12 +1,5 @@
 package org.kie.cekit.cacher.builds.github;
 
-import org.kie.cekit.cacher.builds.yaml.YamlFilesHelper;
-import org.kie.cekit.cacher.builds.yaml.pojo.Modules;
-import org.kie.cekit.cacher.objects.PlainArtifact;
-import org.kie.cekit.cacher.properties.CacherProperties;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,6 +12,14 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.kie.cekit.cacher.builds.yaml.YamlFilesHelper;
+import org.kie.cekit.cacher.builds.yaml.pojo.Modules;
+import org.kie.cekit.cacher.objects.PlainArtifact;
+import org.kie.cekit.cacher.properties.CacherProperties;
 
 /**
  * this class holds all operations related with rhdm/rhpam files changes
@@ -44,7 +45,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
 
     /**
      * {@link BuildDateUpdatesInterceptor}
-     *
      * @param artifact
      */
     @Override
@@ -66,7 +66,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
 
     /**
      * {@link BuildDateUpdatesInterceptor}
-     *
      * @param fileName
      * @param checkSum
      */
@@ -90,7 +89,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                     String baseBranch = elements.get(fileName).getBranch();
                     String branchName = elements.get(fileName).getBranch() + "-" + buildDate + "-" + (int) (Math.random() * 100);
 
-                    gitRepository.handleBranch(BranchOperation.NEW_BRANCH, branchName, baseBranch,"rhpam-7-image");
+                    gitRepository.handleBranch(BranchOperation.NEW_BRANCH, branchName, baseBranch, "rhpam-7-image");
 
                     String bcMonitoringFile = cacherProperties.getGitDir() + "/rhpam-7-image/businesscentral-monitoring/modules/businesscentral-monitoring/module.yaml";
                     Modules bcMonitoring = yamlFilesHelper.load(bcMonitoringFile);
@@ -107,6 +106,9 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                     String smartrouterFile = cacherProperties.getGitDir() + "/rhpam-7-image/smartrouter/modules/smartrouter/module.yaml";
                     Modules smartrouter = yamlFilesHelper.load(smartrouterFile);
 
+                    String processMigrationFile = cacherProperties.getGitDir() + "/rhpam-7-image/process-migration/modules/process-migration/module.yaml";
+                    Modules processMigration = yamlFilesHelper.load(processMigrationFile);
+
                     // Prepare Business Central Monitoring Changes
                     bcMonitoring.getArtifacts().stream().forEach(artifact -> {
                         if (artifact.getName().equals("BUSINESS_CENTRAL_MONITORING_DISTRIBUTION_ZIP")) {
@@ -122,7 +124,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "business_central_monitoring_distribution.zip"
                                 // and add comment on next line : rhpam-${version}.PAM-redhat-${buildDate}-monitoring-ee7.zip
                                 reAddComment(bcMonitoringFile, "target: \"business_central_monitoring_distribution.zip\"",
-                                        String.format("  # %s", bcMonitoringFileName));
+                                             String.format("  # %s", bcMonitoringFileName));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -144,7 +146,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "business_central_distribution.zip"
                                 // and add comment on next line : rhpam-${version}.PAM-redhat-${buildDate}-business-central-eap7-deployable.zip
                                 reAddComment(businessCentralFile, "target: \"business_central_distribution.zip\"",
-                                        String.format("  # %s", bcFileName));
+                                             String.format("  # %s", bcFileName));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -166,7 +168,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "add_ons_distribution.zip"
                                 // and add comment on next line :  rhpam-${version}.PAM-redhat-${buildDate}-add-ons.zip
                                 reAddComment(controllerFile, "target: \"add_ons_distribution.zip\"",
-                                        String.format("  # %s", controllerFileName));
+                                             String.format("  # %s", controllerFileName));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -193,7 +195,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                             log.fine(String.format("Update jbpm-wb-kie-server-backend file from [%s] to [%s]", env.getValue(), backendFileName));
                             env.setValue(backendFileName);
                             yamlFilesHelper.writeModule(kieserver, kieserverFile);
-
                         }
                     });
                     kieserver.getArtifacts().stream().forEach(artifact -> {
@@ -206,8 +207,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 log.fine(String.format("Updating RHPAM kieserver KIE_SERVER_DISTRIBUTION_ZIP from [%s] to [%s]", artifact.getMd5(), kieServerCheckSum));
                                 artifact.setMd5(kieServerCheckSum);
                                 yamlFilesHelper.writeModule(kieserver, kieserverFile);
-
-
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -227,12 +226,12 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "business_central_distribution.zip"
                                 // and add comment on next line :  rhpam-${version}.PAM-redhat-${buildDate}-business-central-eap7-deployable.zip
                                 reAddComment(kieserverFile, "target: \"business_central_distribution.zip\"",
-                                        String.format("  # %s", bcFileName));
+                                             String.format("  # %s", bcFileName));
 
                                 // find target: "kie_server_distribution.zip"
                                 // and add comment on next line :  rhpam-${version}.PAM-redhat-${buildDate}-kie-server-ee8.zip
                                 reAddComment(kieserverFile, "target: \"kie_server_distribution.zip\"",
-                                        String.format("  # %s", kieServerFileName));
+                                             String.format("  # %s", kieServerFileName));
 
                                 // find target: "slf4j-simple.jar"
                                 // and add comment on next line :  slf4j-simple-1.7.22.redhat-2.jar
@@ -241,7 +240,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "jbpm-wb-kie-server-backend-${version}.redhat-X.jar"
                                 // and add comment on next line : # remember to also update "JBPM_WB_KIE_SERVER_BACKEND_JAR" value
                                 reAddComment(kieserverFile, String.format("  value: \"%s\"", backendFileName),
-                                        "# remember to also update \"JBPM_WB_KIE_SERVER_BACKEND_JAR\" value");
+                                             "# remember to also update \"JBPM_WB_KIE_SERVER_BACKEND_JAR\" value");
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -260,10 +259,32 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 artifact.setMd5(smartrouterCheckSum);
                                 yamlFilesHelper.writeModule(smartrouter, smartrouterFile);
 
-                                // find target: "business_central_distribution.zip"
+                                // find target: "add_ons_distribution.zip"
                                 // and add comment on next line :  rhpam-${version}.PAM-redhat-${buildDate}-add-ons.zip
                                 reAddComment(smartrouterFile, "target: \"add_ons_distribution.zip\"",
-                                        String.format("  # %s", smartrouterFileName));
+                                             String.format("  # %s", smartrouterFileName));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                    // Prepare process-migration changes
+                    processMigration.getArtifacts().stream().forEach(artifact -> {
+                        if (artifact.getName().equals("ADD_ONS_DISTRIBUTION_ZIP")) {
+                            String processMigrationFileName = String.format("rhpam-%s.PAM-redhat-%s-add-ons.zip", version, buildDate);
+                            String processMigrationCheckSum;
+                            try {
+                                processMigrationCheckSum = elements.get(processMigrationFileName).getChecksum();
+
+                                log.fine(String.format("Updating RHPAM process-migration ADD_ONS_DISTRIBUTION_ZIP from [%s] to [%s]", artifact.getMd5(), processMigrationCheckSum));
+                                artifact.setMd5(processMigrationCheckSum);
+                                yamlFilesHelper.writeModule(processMigration, processMigrationFile);
+
+                                // find target: "add_ons_distribution.zip"
+                                // and add comment on next line :  rhpam-${version}.PAM-redhat-${buildDate}-add-ons.zip
+                                reAddComment(processMigrationFile, "target: \"add_ons_distribution.zip\"",
+                                             String.format("  # %s", processMigrationFileName));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -280,14 +301,12 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                         pullRequestSender.performPullRequest("rhpam-7-image", baseBranch, branchName, prTittle, prDescription);
 
                         gitRepository.handleBranch(BranchOperation.DELETE_BRANCH, branchName, null, "rhpam-7-image");
-
                     } else {
                         log.warning("something went wrong while preparing the rhpam-7-image for the pull request");
                     }
 
                     // remove rhpam from element items
                     removeItems("rhpam");
-
                 }
 
                 if (isRhdmReadyForPR()) {
@@ -313,9 +332,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                     String kieserverFile = cacherProperties.getGitDir() + "/rhdm-7-image/kieserver/modules/kieserver/module.yaml";
                     Modules kieserver = yamlFilesHelper.load(kieserverFile);
 
-                    String optawebFile = cacherProperties.getGitDir() + "/rhdm-7-image/optaweb-employee-rostering/modules/optaweb-employee-rostering/module.yaml";
-                    Modules optaweb = yamlFilesHelper.load(optawebFile);
-
                     // Prepare controller Changes - artifacts
                     controller.getArtifacts().stream().forEach(artifact -> {
                         if (artifact.getName().equals("ADD_ONS_DISTRIBUTION_ZIP")) {
@@ -333,7 +349,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "add_ons_distribution.zip"
                                 // and add comment on next line :  rhdm-${version}.DM-redhat-${buildDate}-add-ons.zip
                                 reAddComment(controllerFile, "target: \"add_ons_distribution.zip\"",
-                                        String.format("  # %s", controllerFileName));
+                                             String.format("  # %s", controllerFileName));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -365,12 +381,11 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "decision_central_distribution.zip"
                                 // and add comment on next line :  rhdm-${version}.DM-redhat-${buildDate}-decision-central-eap7-deployable.zip
                                 reAddComment(decisionCentralFile, "target: \"decision_central_distribution.zip\"",
-                                        String.format("  # %s", decisionCentralFileName));
+                                             String.format("  # %s", decisionCentralFileName));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
-
                     });
 
                     // Prepare kieserver changes
@@ -388,56 +403,11 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 // find target: "kie_server_distribution.zip"
                                 // and add comment on next line :  rhdm-${version}.DM-redhat-${buildDate}-kie-server-ee8.zip
                                 reAddComment(kieserverFile, "target: \"kie_server_distribution.zip\"",
-                                        String.format("  # %s", kieserverFileName));
+                                             String.format("  # %s", kieserverFileName));
 
                                 // find target: "slf4j-simple.jar"
                                 // and add comment on next line :  slf4j-simple-1.7.22.redhat-2.jar
                                 reAddComment(kieserverFile, "target: \"slf4j-simple.jar\"", "  # slf4j-simple-1.7.22.redhat-2.jar");
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-
-                    // Prepare optaweb changes
-                    String employeeWarFileName = String.format("employee-rostering-distribution-%s.redhat-%s/binaries/employee-rostering-webapp-%s.redhat-%s.war",
-                            version, buildDate, version, buildDate);
-                    optaweb.getEnvs().stream().forEach(env -> {
-                        if (env.getName().equals("EMPLOYEE_ROSTERING_DISTRIBUTION_WAR")) {
-
-                            log.fine(String.format("Update employee-rostering-webapp file from [%s] to [%s]", env.getValue(), employeeWarFileName));
-                            env.setValue(employeeWarFileName);
-                            yamlFilesHelper.writeModule(optaweb, optawebFile);
-                        }
-
-                        if (env.getName().equals("EMPLOYEE_ROSTERING_DISTRIBUTION_ZIP")) {
-                            // rhdm-${shortenedVersion}-employee-rostering.zip
-                            String employeeRostering = String.format("rhdm-%s-employee-rostering.zip", cacherProperties.shortenedVersion(version));
-                            // if the filename does not match the current shortened version, update it
-                            if (!env.getValue().equals(employeeRostering)) {
-                                env.setValue(employeeRostering);
-                            }
-                        }
-                    });
-                    optaweb.getArtifacts().stream().forEach(artifact -> {
-                        if (artifact.getName().equals("ADD_ONS_DISTRIBUTION_ZIP")) {
-                            String optawebFileName = String.format("rhdm-%s.DM-redhat-%s-add-ons.zip", version, buildDate);
-                            String optawebCheckSum;
-                            try {
-                                optawebCheckSum = elements.get(optawebFileName).getChecksum();
-
-                                log.fine(String.format("Updating RHDM Optaweb add-ons from [%s] to [%s]", artifact.getMd5(), optawebCheckSum));
-                                artifact.setMd5(optawebCheckSum);
-                                yamlFilesHelper.writeModule(optaweb, optawebFile);
-
-                                // find target: "add_ons_distribution.zip"
-                                // and add comment on next line :  rhdm-${version}.DM-redhat-${buildDate}-kie-server-ee8.zip
-                                reAddComment(optawebFile, "target: \"add_ons_distribution.zip\"",
-                                        String.format("  # %s", optawebFileName));
-                                // find target: "employee-rostering-distribution-${version}.redhat-${buildDate}/binaries/employee-rostering-webapp-${version}.redhat-${buildDate}.war"
-                                // and add comment on next line : # remember to also update "EMPLOYEE_ROSTERING_DISTRIBUTION_WAR" value
-                                reAddComment(optawebFile, String.format("  value: \"%s\"", employeeWarFileName),
-                                        "# remember to also update \"EMPLOYEE_ROSTERING_DISTRIBUTION_WAR\" value");
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -454,17 +424,14 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                                 " base build date is " + buildDate;
                         pullRequestSender.performPullRequest("rhdm-7-image", baseBranch, branchName, prTittle, prDescription);
 
-                        gitRepository.handleBranch(BranchOperation.DELETE_BRANCH, branchName, null,"rhdm-7-image");
-
+                        gitRepository.handleBranch(BranchOperation.DELETE_BRANCH, branchName, null, "rhdm-7-image");
                     } else {
                         log.warning("something went wrong while preparing the rhdm-7-image for the pull request");
                     }
 
                     // remove RHDM files elements
                     removeItems("rhdm");
-
                 }
-
             } else {
                 log.info("File " + fileName + " not found on the elements map. ignoring...");
             }
@@ -475,7 +442,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
 
     /**
      * Re-add comments on the module.yaml file.
-     *
      * @param fileName
      * @param linePattern
      * @param comment
@@ -504,7 +470,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
 
     /**
      * Verify if the elements HashMap contains all required rhpam files
-     *
      * @return true if the files are ready or false if its not ready
      */
     private boolean isRhpamReadyForPR() {
@@ -524,7 +489,6 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
 
     /**
      * Verify if the elements HashMap contains all required rhdm files
-     *
      * @return true if the files are ready or false if its not ready
      */
     private boolean isRhdmReadyForPR() {
@@ -541,6 +505,4 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
         }
         return isReady && rhdm.size() == 3;
     }
-
-
 }

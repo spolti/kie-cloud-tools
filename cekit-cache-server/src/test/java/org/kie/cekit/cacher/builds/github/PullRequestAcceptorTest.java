@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.kie.cekit.cacher.builds.yaml.YamlFilesHelper;
 import org.kie.cekit.cacher.builds.yaml.pojo.Modules;
 import org.kie.cekit.cacher.properties.CacherProperties;
+import org.kie.cekit.cacher.utils.CacherUtils;
 
 import javax.inject.Inject;
 import java.io.BufferedReader;
@@ -29,8 +30,17 @@ public class PullRequestAcceptorTest {
     @Inject
     GitRepository gitRepository;
 
+    @Inject
+    CacherUtils cacherUtils;
+
+
     @Test
-    public void testRhpamCommentaryAddition() throws IOException, InterruptedException {
+    public void testRhpamCommentaryAddition() throws Exception {
+        // reset git repo before this test
+        gitRepository.cleanGitRepos();
+        cacherUtils.startupVerifications();
+        gitRepository.prepareLocalGitRepo();
+
         // test bc monitoring
         String bcMonitoringFile = cacherProperties.getGitDir() + "/rhpam-7-image/businesscentral-monitoring/modules/businesscentral-monitoring/module.yaml";
         Modules bcMonitoring = yamlFilesHelper.load(bcMonitoringFile);
@@ -66,12 +76,13 @@ public class PullRequestAcceptorTest {
             }
         });
 
-
         // test rhpam kieserver
         String kieserverFile = cacherProperties.getGitDir() + "/rhpam-7-image/kieserver/modules/kieserver/module.yaml";
-        Modules kieserver = yamlFilesHelper.load(kieserverFile);
-        yamlFilesHelper.writeModule(kieserver, kieserverFile);
         String buildDate = gitRepository.getCurrentProductBuildDate(cacherProperties.defaultBranch());
+        Modules kieserver = yamlFilesHelper.load(kieserverFile);
+
+        yamlFilesHelper.writeModule(kieserver, kieserverFile);
+
         String backendFileName = String.format("jbpm-wb-kie-server-backend-7.6.0.redhat-%s.jar", buildDate);
         prAcceptor.reAddComment(kieserverFile, String.format("  value: \"%s\"", backendFileName),
                 "# remember to also update \"JBPM_WB_KIE_SERVER_BACKEND_JAR\" value");
@@ -96,6 +107,15 @@ public class PullRequestAcceptorTest {
         prAcceptor.reAddComment(smartrouterFile, "target: \"add_ons_distribution.zip\"",
                 String.format("  # %s", "rhpam-7.6.0.PAM-redhat-20191006-add-ons.zip"));
         Assertions.assertTrue(containsComment(smartrouterFile, String.format("  # %s", "rhpam-7.6.0.PAM-redhat-20191006-add-ons.zip")));
+
+        // test rhpam process-migration
+        String processMigrationFile = cacherProperties.getGitDir() + "/rhpam-7-image/process-migration/modules/process-migration/module.yaml";
+        Modules processMigration = yamlFilesHelper.load(processMigrationFile);
+        yamlFilesHelper.writeModule(processMigration, processMigrationFile);
+        prAcceptor.reAddComment(processMigrationFile, "target: \"add_ons_distribution.zip\"",
+                                String.format("  # %s", "rhpam-7.6.0.PAM-redhat-20191006-add-ons.zip"));
+        Assertions.assertTrue(containsComment(processMigrationFile, String.format("  # %s", "rhpam-7.6.0.PAM-redhat-20191006-add-ons.zip")));
+
     }
 
     @Test
@@ -141,32 +161,6 @@ public class PullRequestAcceptorTest {
                 String.format("  # %s", "rhdm-7.6.0.DM-redhat-20191006-kie-server-ee8.zip")));
         Assertions.assertTrue(containsComment(kieserverFile,
                 String.format("  # %s", "slf4j-simple-1.7.22.redhat-2.jar")));
-
-
-        String optawebFile = cacherProperties.getGitDir() + "/rhdm-7-image/optaweb-employee-rostering/modules/optaweb-employee-rostering/module.yaml";
-        Modules optaweb = yamlFilesHelper.load(optawebFile);
-        yamlFilesHelper.writeModule(optaweb, optawebFile);
-        String buildDate = gitRepository.getCurrentProductBuildDate(cacherProperties.defaultBranch());
-        String employeeWarFileName = String.format("employee-rostering-distribution-7.6.0.redhat-%s/binaries/employee-rostering-webapp-7.6.0.redhat-%s.war", buildDate, buildDate);
-        prAcceptor.reAddComment(optawebFile, String.format("  value: \"%s\"", employeeWarFileName),
-                "# remember to also update \"EMPLOYEE_ROSTERING_DISTRIBUTION_WAR\" value");
-        Assertions.assertTrue(containsComment(optawebFile, "# remember to also update \"EMPLOYEE_ROSTERING_DISTRIBUTION_WAR\" value"));
-
-        prAcceptor.reAddComment(optawebFile, "target: \"add_ons_distribution.zip\"",
-                String.format("  # %s", "rhdm-7.6.0.DM-redhat-20191006-add-ons.zip"));
-        Assertions.assertTrue(containsComment(optawebFile, String.format("  # %s", "rhdm-7.6.0.DM-redhat-20191006-add-ons.zip")));
-
-        optaweb.getEnvs().stream().forEach(env -> {
-            if (env.getName().equals("EMPLOYEE_ROSTERING_DISTRIBUTION_ZIP")) {
-                // rhdm-${shortenedVersion}-employee-rostering.zip
-                String employeeRostering = String.format("rhdm-%s-employee-rostering.zip", "7.9");
-                // if the filename does not match the current shortened version, update it
-                if (!env.getValue().equals(employeeRostering)) {
-                    env.setValue(employeeRostering);
-                }
-                Assertions.assertEquals(employeeRostering, env.getValue());
-            }
-        });
 
     }
 
