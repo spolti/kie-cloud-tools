@@ -137,7 +137,7 @@ public class GitRepository {
     public String getCurrentProductBuildDate(String branch) throws IOException, InterruptedException {
 
         Pattern buildDatePattern = Pattern.compile("(\\d{8})");
-        // rebase before
+        // if needed, rebase before
         forceRebase = false;
         checkoutDesiredBranch(branch);
         gitRebase(branch);

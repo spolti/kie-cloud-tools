@@ -178,7 +178,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                     controller.getEnvs().stream().forEach(env -> {
                         if (env.getName().equals("CONTROLLER_DISTRIBUTION_ZIP")) {
                             // rhpam-${shortenedVersion}-controller-ee7.zip
-                            String controllerEE7Zip = String.format("rhpam-%s-controller-ee7.zip", cacherProperties.shortenedVersion(version));
+                            String controllerEE7Zip = String.format("rhpam-%s-controller-ee7.zip", version);
                             // if the filename does not match the current shortened version, update it
                             if (!env.getValue().equals(controllerEE7Zip)) {
                                 env.setValue(controllerEE7Zip);
@@ -359,7 +359,7 @@ public class PullRequestAcceptor implements BuildDateUpdatesInterceptor {
                     controller.getEnvs().stream().forEach(env -> {
                         if (env.getName().equals("CONTROLLER_DISTRIBUTION_ZIP")) {
                             // rhdm-${shortenedVersion}-controller-ee7.zip
-                            String controllerEE7Zip = String.format("rhdm-%s-controller-ee7.zip", cacherProperties.shortenedVersion(version));
+                            String controllerEE7Zip = String.format("rhdm-%s-controller-ee7.zip", version);
                             // if the filename does not match the current shortened version, update it
                             if (!env.getValue().equals(controllerEE7Zip)) {
                                 env.setValue(controllerEE7Zip);
