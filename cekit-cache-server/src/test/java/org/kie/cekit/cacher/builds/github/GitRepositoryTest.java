@@ -2,9 +2,11 @@ package org.kie.cekit.cacher.builds.github;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.kie.cekit.cacher.properties.CacherProperties;
+import org.kie.cekit.cacher.utils.CacherUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -18,6 +20,17 @@ public class GitRepositoryTest {
 
     @Inject
     CacherProperties cacherProperties;
+
+    @Inject
+    CacherUtils cacherUtils;
+
+    @BeforeAll
+    public void cleanGit() throws Exception {
+        // reset git repo before this test
+        gitRepository.cleanGitRepos();
+        cacherUtils.startupVerifications();
+        gitRepository.prepareLocalGitRepo();
+    }
 
     /**
      * If this tests runs ok means that the github repos

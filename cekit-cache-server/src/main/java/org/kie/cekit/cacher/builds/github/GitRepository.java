@@ -156,14 +156,14 @@ public class GitRepository {
                 .filter(line -> line.contains(rhpamFilter))
                 .findFirst().get();
 
-        Matcher matcher = buildDatePattern.matcher(rhdmKieServerDateBuild);
-        Matcher matcher1 = buildDatePattern.matcher(rhpamKieServerDateBuild);
-        if (matcher.find() && matcher1.find()) {
+        Matcher rhdmMatcher = buildDatePattern.matcher(rhdmKieServerDateBuild);
+        Matcher rhpamMatcher = buildDatePattern.matcher(rhpamKieServerDateBuild);
+        if (rhdmMatcher.find() && rhpamMatcher.find()) {
             log.fine("Matchers found... Proceeding with the groups validation...");
-            System.out.println("Matcher group " + matcher.group() + "  Matcher1 group " + matcher1.group());
-            if (matcher.group().equals(matcher1.group())) {
-                log.fine("Build date validation succeed, current build date is: " + matcher.group());
-                return matcher.group();
+            log.fine("rhdmMatcher group " + rhdmMatcher.group() + "  rhpamMatcher group " + rhpamMatcher.group());
+            if (rhdmMatcher.group().equals(rhpamMatcher.group())) {
+                log.fine("Build date validation succeed, current build date is: " + rhdmMatcher.group());
+                return rhdmMatcher.group();
             }
         }
         return "NONE";
