@@ -6,10 +6,10 @@ MD5SUM := $(shell ls target/*-runner.jar | xargs md5sum)
 .PHONY: build
 build:
 	sudo rm -rf /tmp/cacher
-	export CACHER_PRODUCT_VERSION=7.7.0
+	export CACHER_PRODUCT_VERSION=7.8.0; \
 	export CACHER_BASE_DIR=/tmp/cacher/data; \
 	export CACHER_ENABLE_GITHUB_BOT=true; \
-	export CACHER_GITHUB_USERNAME=bsig-gh-bot \
+	export CACHER_GITHUB_USERNAME=bsig-gh-bot; \
 	export CACHER_GITHUB_PASSWORD=password; \
 	export CACHER_GITHUB_EMAIL=emailg@gmail.com; \
 	export CACHER_RHDM_URL=https://url; \

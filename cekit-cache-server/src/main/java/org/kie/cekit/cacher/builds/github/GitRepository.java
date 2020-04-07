@@ -142,18 +142,26 @@ public class GitRepository {
         checkoutDesiredBranch(branch);
         gitRebase(branch);
 
-        String rhdmFilter = String.format("# rhdm-%s.DM-redhat", cacherProperties.version());
+        String rhdmFilter = String.format("# rhdm-%s.redhat", cacherProperties.version());
+        if (!cacherProperties.version().equals("7.8.0")) {
+            rhdmFilter = String.format("# rhdm-%s.DM-redhat", cacherProperties.version());
+        }
+        String finalRhdmFilter = rhdmFilter;
         String rhdmKieServerDateBuild = yamlFilesHelper
                 .loadRawData(cacherProperties.getGitDir() + "/rhdm-7-image/kieserver/modules/kieserver/module.yaml")
                 .stream()
-                .filter(line -> line.contains(rhdmFilter))
+                .filter(line -> line.contains(finalRhdmFilter))
                 .findFirst().get();
 
-        String rhpamFilter = String.format("# rhpam-%s.PAM-redhat", cacherProperties.version());
+        String rhpamFilter = String.format("# rhpam-%s.redhat", cacherProperties.version());
+        if (!cacherProperties.version().equals("7.8.0")) {
+            rhpamFilter = String.format("# rhpam-%s.PAM-redhat", cacherProperties.version());
+        }
+        String finalRhpamFilter = rhpamFilter;
         String rhpamKieServerDateBuild = yamlFilesHelper
                 .loadRawData(cacherProperties.getGitDir() + "/rhpam-7-image/kieserver/modules/kieserver/module.yaml")
                 .stream()
-                .filter(line -> line.contains(rhpamFilter))
+                .filter(line -> line.contains(finalRhpamFilter))
                 .findFirst().get();
 
         Matcher rhdmMatcher = buildDatePattern.matcher(rhdmKieServerDateBuild);

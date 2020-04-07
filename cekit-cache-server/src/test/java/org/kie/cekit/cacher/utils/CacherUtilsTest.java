@@ -43,6 +43,10 @@ public class CacherUtilsTest {
 
     @BeforeAll
     public void beforeTests() throws IOException {
+        clean();
+
+        cacherUtils.startupVerifications();
+
         File fout = new File(preLoadFileLocation);
         FileOutputStream fos = new FileOutputStream(fout);
         OutputStreamWriter osw = new OutputStreamWriter(fos);
@@ -54,15 +58,9 @@ public class CacherUtilsTest {
 
     @AfterAll
     public void cleanCacherDirectory() {
-        try {
-            Files.walk(Paths.get(cacherProperties.getArtifactsTmpDir()))
-                    .map(Path::toFile)
-                    .forEach(file -> file.delete());
-            Paths.get(preLoadFileLocation).toFile().delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        clean();
     }
+
 
     @Test
     @Order(1)
@@ -149,4 +147,17 @@ public class CacherUtilsTest {
 
     }
 
+
+    private void clean() {
+        try {
+            Files.walk(Paths.get(cacherProperties.getArtifactsTmpDir()))
+                    .map(Path::toFile)
+                    .forEach(file -> file.delete());
+            Paths.get(preLoadFileLocation).toFile().delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
+
